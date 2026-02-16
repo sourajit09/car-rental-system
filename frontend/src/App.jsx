@@ -9,10 +9,12 @@ import Register from './pages/Auth/Register';
 import Car from './pages/Car/Car';
 import Footer from './components/Footer.jsx';
 import Header from './components/Header.jsx';
+import  { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <>
+    <Toaster/>
       {/* Navbar always on top */}
       <Header />
 
