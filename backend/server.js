@@ -1,6 +1,5 @@
 import express from "express";
 import colors from "colors"
-import morgan from "morgan";
 import cors from "cors"
 import dotenv from "dotenv"
 import { connectDb } from "./config/db.js";
