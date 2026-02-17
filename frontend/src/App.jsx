@@ -10,6 +10,7 @@ import Car from './pages/Car/Car';
 import Footer from './components/Footer.jsx';
 import Header from './components/Header.jsx';
 import  { Toaster } from 'react-hot-toast';
+import CarDetails from "./pages/Car/CarDetails.jsx";
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
         <Route path='/cars' element={<Car />} />
+         <Route path='/cars/:id' element={<CarDetails />} />
       </Routes>
 
       {/* Footer always bottom */}

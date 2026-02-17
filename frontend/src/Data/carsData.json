@@ -6,7 +6,8 @@
         "seats": 5,
         "mileage":14,
         "pricePerDay": 1500,
-        "image": "https://tse3.mm.bing.net/th/id/OIP.eBWbzrLjSwXCa3eAlDqL8wHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse3.mm.bing.net/th/id/OIP.eBWbzrLjSwXCa3eAlDqL8wHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Toyota Camry is a comfortable and fuel-efficient sedan perfect for city and highway driving."
     },
     {
         "id": 2,
@@ -15,7 +16,8 @@
         "seats": 5,
         "mileage":12,
         "pricePerDay": 1200,
-        "image": "https://tse1.mm.bing.net/th/id/OIP.VBdrxVv9Q3q8El_A1m3ehQHaEj?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse1.mm.bing.net/th/id/OIP.VBdrxVv9Q3q8El_A1m3ehQHaEj?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Honda Accord is a reliable and spacious sedan with advanced safety features and a smooth ride."
     },
     {
         "id": 3,
@@ -24,7 +26,8 @@
         "seats": 4,
         "mileage":10,
         "pricePerDay": 5000,
-        "image": "https://tse3.mm.bing.net/th/id/OIP.GOa14XniZcCbVCw6RsiJYgHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse3.mm.bing.net/th/id/OIP.GOa14XniZcCbVCw6RsiJYgHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Ford Mustang is a classic American muscle car known for its powerful performance and iconic design."
     },
     {
         "id": 4,
@@ -33,7 +36,8 @@
         "seats": 5,
         "mileage":15,
         "pricePerDay": 1000,
-        "image": "https://tse2.mm.bing.net/th/id/OIP.AUUkkfilLfKy-YNGoSwRLAHaE4?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse2.mm.bing.net/th/id/OIP.AUUkkfilLfKy-YNGoSwRLAHaE4?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Chevrolet Malibu is a stylish and efficient midsize sedan with a comfortable interior and advanced technology."
     },
     {
         "id": 5,
@@ -42,7 +46,8 @@
          "seats": 5,
         "mileage":11,
         "pricePerDay": 6000,
-        "image": "https://tse3.mm.bing.net/th/id/OIP.Kc004iHYMJcy13P92HQVgwHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse3.mm.bing.net/th/id/OIP.Kc004iHYMJcy13P92HQVgwHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "BMW 3 Series is a luxury sedan that offers a perfect blend of performance, comfort, and cutting-edge technology."
     },
     {
         "id": 6,
@@ -51,7 +56,8 @@
         "seats": 5,
         "mileage":13,
         "pricePerDay": 5500,
-        "image": "https://i.gaw.to/vehicles/photos/40/37/403722-2025-audi-a4.jpg?1024x640"
+        "image": "https://i.gaw.to/vehicles/photos/40/37/403722-2025-audi-a4.jpg?1024x640",
+        "about": "Audi A4 is a sophisticated and stylish sedan with a luxurious interior, advanced safety features, and a smooth ride."
     },
     {
         "id": 7,
@@ -60,7 +66,8 @@
         "seats": 5,
         "mileage":9,
         "pricePerDay": 7000,
-        "image": "https://tse1.mm.bing.net/th/id/OIP.juFaywLlKi3nd-33pOgUPAHaE8?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse1.mm.bing.net/th/id/OIP.juFaywLlKi3nd-33pOgUPAHaE8?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Mercedes-Benz C-Class is a luxury sedan that combines elegant design, advanced technology, and exceptional performance for an unforgettable driving experience."
     },
     {
         "id": 8,
@@ -69,7 +76,8 @@
         "seats": 5,
         "mileage":8,
         "pricePerDay": 8000,
-        "image": "https://static1.hotcarsimages.com/wordpress/wp-content/uploads/2023/09/2024-tesla-model-3-new-design-front-quarter-view.jpg"
+        "image": "https://static1.hotcarsimages.com/wordpress/wp-content/uploads/2023/09/2024-tesla-model-3-new-design-front-quarter-view.jpg",
+        "about": "Tesla Model 3 is an all-electric sedan that offers impressive acceleration, cutting-edge technology, and a long electric range for eco-conscious drivers."
     },
     {
         "id": 9,
@@ -77,8 +85,9 @@
         "model": "2018",
         "seats": 5,
         "mileage":16,
-        "pricePerDay": 900,
-        "image": "https://wallpapercave.com/wp/wp11629510.jpg"
+        "pricePerDay": 7000,
+        "image": "https://wallpapercave.com/wp/wp11629510.jpg",
+        "about": "Nissan Altima is a reliable and fuel-efficient sedan with a comfortable interior and advanced safety features, making it a great choice for daily commuting and long drives."
     },
     {
         "id": 10,
@@ -87,7 +96,8 @@
         "seats": 5,
         "mileage":14,
         "pricePerDay": 1100,
-        "image": "https://tse4.mm.bing.net/th/id/OIP.7HTCWu7BFA_rN4LYG0RBPAHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3"
+        "image": "https://tse4.mm.bing.net/th/id/OIP.7HTCWu7BFA_rN4LYG0RBPAHaEK?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Hyundai Sonata is a stylish and efficient midsize sedan with a comfortable interior, advanced technology, and a smooth ride."
     },
     {
         "id": 11,
@@ -96,6 +106,7 @@
         "seats": 5,
         "mileage":13,
         "pricePerDay": 1000,
-        "image": "https://images5.alphacoders.com/724/724676.jpg"
+        "image": "https://images5.alphacoders.com/724/724676.jpg",
+        "about": "Kia Optima is a sleek and affordable midsize sedan that offers a comfortable interior, advanced safety features, and a smooth ride."
     }
 ]
