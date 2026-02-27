@@ -1,41 +1,110 @@
-import userModel from "../models/userModel"
-import bcrypt from "bcryptjs"
+import userModel from "../models/userModel.js";
+import bcrypt from "bcryptjs";
+import JWT from "jsonwebtoken";
 
-export const register=async(req,res)=>{
-try{
-const {uname,email,password,phone}=req.body
+export const register = async (req, res) => {
+  try {
+    const { uname, email, password, phone } = req.body;
 
-if(!uname | !email | !password | !phone){
-    return res.status(400).send({
-        success:false,
-        message:`please provide all fields`
-    })
-}
+    if (!uname | !email | !password | !phone) {
+      return res.status(400).send({
+        success: false,
+        message: `please provide all fields`,
+      });
+    }
 
-const existinguser=await userModel.findOne({email})
-if(existinguser){
-    return res.status(500).send({
-        success:false,
-        message:`Use Already Exists`
-    })
-}
-const salt=await bcrypt.genSalt(10)
-const hashedPassword=await bcrypt.hash(password,salt)
+    const existinguser = await userModel.findOne({ email });
+    if (existinguser) {
+      return res.status(500).send({
+        success: false,
+        message: `Use Already Exists`,
+      });
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-const user=new userModel({uname,email,password:hashedPassword,phone})
-await user.save()
-user.password=undefined
-res.status(201).send({
-    success:true,
-    message:`User Created!`,
-    user
-})
-}catch(error){
-    console.log(error)
+    const user = new userModel({
+      uname,
+      email,
+      password: hashedPassword,
+      phone,
+    });
+    await user.save();
+    user.password = undefined;
+    res.status(201).send({
+      success: true,
+      message: `User Created!`,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
     res.status(500).send({
-        success:false,
-        message:"Error in Register",
-        error
-    })
-}
-}
+      success: false,
+      message: "Error in Register",
+      error,
+    });
+  }
+};
+
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email | !password) {
+      return res.status(500).send({
+        message: "add email or password",
+        success: false,
+      });
+    }
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      res.status(500).send({
+        message: "user not found",
+        success: false,
+      });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(500).send({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Login",
+      error,
+    });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(500).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const data = req.body;
+    const user = await userModel.findByIdAndUpdate(
+      id,
+      { $set: data },
+      { returnOriginal: false },
+    );
+    res.status(200).send({
+      success: true,
+      message: "User has been updated",
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in updating the user",
+      error,
+    });
+  }
+};

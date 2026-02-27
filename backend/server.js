@@ -3,7 +3,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import { connectDb } from "./config/db.js";
 const app=express();
-import {userController} from "./controllers/userController.js"
+import userRoutes from "./routes/userRoutes.js"
 
 dotenv.config()
 connectDb()
@@ -11,12 +11,13 @@ connectDb()
 app.use(cors())
 app.use(express.json())
 
-
+//routes
+app.use("/api/v1/user",userRoutes)
 
 app.get("/",(req,res)=>{
     res.send("this is server")
 })
-app.use("/api/auth")
+
 
 const port=process.env.PORT
  
