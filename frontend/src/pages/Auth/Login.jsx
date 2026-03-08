@@ -49,8 +49,6 @@ const Login = () => {
             Login Form
           </h3>
 
-          
-
           <div className="mb-3">
             <label className="form-label">Email address</label>
             <input

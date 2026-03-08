@@ -14,8 +14,10 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+    console.log("values:",uname,email,password,phone);
+    
     try {
-      if (uname && email && password && phone) {
+      if (!uname || !email || !password || !phone) {
          return toast.error("Please provide All fields");
       }
       console.log('auth from data',uname+email+phone+password);
