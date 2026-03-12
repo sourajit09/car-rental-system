@@ -88,14 +88,27 @@ const user = JSON.parse(localStorage.getItem("user"));
                             </tr>
                         </tbody>
                     </table>
-                    <h4 className='text-danger'>Price:RS{carDetails.pricePerDay} / day</h4>
-                   {!user ? (
-  <Link to={'/login'} className="btn btn-primary">
-    Please Login to book this car
-  </Link>
-) : (
-  <button className="btn btn-primary"onClick={()=>setShow(!show)}>Book Now</button>
-)}
+                  
+<div className='d-inline-flex align-items-center gap-2 px-3 py-2 rounded-3 mb-3'
+    style={{
+        background: '#fd0d0d',
+        boxShadow: '0 4px 14px rgba(13,110,253,0.35)'
+    }}>
+    <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: '500', opacity: 0.85 }}>Price:</span>
+    <span style={{ color: '#fff', fontSize: '1.3rem', fontWeight: '800', letterSpacing: '-0.5px' }}>
+        Rs {carDetails.pricePerDay}
+    </span>
+    <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: '500', opacity: 0.85 }}>/day</span>
+</div>
+<div>
+    {!user ? (
+        <Link to={'/login'} className="btn btn-primary">
+            Please Login to book this car
+        </Link>
+    ) : (
+        <button className="btn btn-primary" onClick={() => setShow(!show)}>Book Now</button>
+    )}
+</div>
                 </div>
             </div>
 
