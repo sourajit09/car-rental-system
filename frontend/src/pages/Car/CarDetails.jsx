@@ -90,7 +90,7 @@ const user = JSON.parse(localStorage.getItem("user"));
                     </table>
                     <h4 className='text-danger'>Price:RS{carDetails.pricePerDay} / day</h4>
                    {!user ? (
-  <Link to="/login" className="btn btn-primary">
+  <Link to={'/login'} className="btn btn-primary">
     Please Login to book this car
   </Link>
 ) : (

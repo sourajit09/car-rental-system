@@ -6,6 +6,9 @@ const router=express.Router()
 
 router.post("/register",register)
 
+
+
 router.patch("/update/:id",authMiddleware)
+
 
 export default router
