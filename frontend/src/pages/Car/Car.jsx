@@ -2,6 +2,7 @@ import React from 'react'
 import CarsData from '../../data/carsData.json'
 import CarCard from '../../components/CarCard'
 const Car = () => {
+  
   return (
     <>
     <div style={{minHeight:'80vh',marginTop:'50px'}} >

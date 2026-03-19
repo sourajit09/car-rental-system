@@ -11,6 +11,7 @@ import Footer from './components/Footer.jsx';
 import Header from './components/Header.jsx';
 import  { Toaster } from 'react-hot-toast';
 import CarDetails from "./pages/Car/CarDetails.jsx";
+import Profile from "./pages/user/Profile.jsx";
 
 function App() {
   return (
@@ -24,12 +25,16 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
         <Route path='/contact' element={<Contact />} />
+ 
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
+    
         <Route path='/cars' element={<Car />} />
          <Route path='/cars/:id' element={<CarDetails />} />
+          <Route path='/profile' element={<Profile />} />
+           {/* <Route path='/' element={<Home />} /> */}
       </Routes>
-
+      
       {/* Footer always bottom */}
       <Footer />
     </>

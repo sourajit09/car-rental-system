@@ -2,7 +2,7 @@ import React from 'react'
 
 const BookingModal = (prop) => {
 
-  const { show, setShow, price, pickupDate, setPickupDate, returnDate, setReturnDate, handleBooking } = prop;
+  const {  setShow, price, pickupDate, setPickupDate, returnDate, setReturnDate, handleBooking } = prop;
 
   // total
   const calculateTotal = () => {
