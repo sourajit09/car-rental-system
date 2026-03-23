@@ -1,7 +1,16 @@
 import React from 'react';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
+  const isAuthenticated = Boolean(localStorage.getItem('token'));
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   return (
     <>
   <nav className="navbar navbar-expand-lg fixed-top">
@@ -44,13 +53,27 @@ const Header = () => {
           <Link className="nav-link " aria-current="page" to="/profile">My Account </Link>
         </li>
 
-       <li className="nav-item">
-          <Link className="nav-link " aria-current="page" to="/login">Login </Link>
-        </li>
+        {isAuthenticated ? (
+          <li className="nav-item">
+            <button
+              type="button"
+              className="nav-link btn btn-link px-0"
+              onClick={handleLogout}
+            >
+              Logout
+            </button>
+          </li>
+        ) : (
+          <>
+            <li className="nav-item">
+              <Link className="nav-link " aria-current="page" to="/login">Login </Link>
+            </li>
 
-        <li className="nav-item">
-          <Link className="nav-link " aria-current="page" to="/register">Register</Link>
-        </li>
+            <li className="nav-item">
+              <Link className="nav-link " aria-current="page" to="/register">Register</Link>
+            </li>
+          </>
+        )}
 
 
       </ul>

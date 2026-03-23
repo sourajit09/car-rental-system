@@ -119,5 +119,71 @@
         "pricePerDay": 1000,
         "image": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ1VDkFFueIEEEsFrU70VN6Lly6Lt-qmQQibg&s",
         "about": "Kia Optima is a sleek and affordable midsize sedan that offers a comfortable interior, advanced safety features, and a smooth ride."
+    },
+    {
+        "id": 12,
+        "name": "Toyota Vellfire",
+        "year": 2021,
+        "model": "Z Platinum",  
+        "seats":5,
+        "mileage":10,
+        "pricePerDay": 4000,
+        "image": "https://imgs.search.brave.com/NKTU52eMx0KdDBf96sP134ci5hm5TFSWnSl53cEB9bY/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWdk/LmFlcGxjZG4uY29t/LzY2NHgzNzQvbi9j/dy9lYy8xNTQ0ODMv/dmVsbGZpcmUtZXh0/ZXJpb3ItcmlnaHQt/ZnJvbnQtdGhyZWUt/cXVhcnRlci00LnBu/Zz9pc2lnPTAmcT04/MA",
+        "about": "Toyota Vellfire is a luxurious and spacious minivan that offers a comfortable and premium driving experience, perfect for families or group travel."
+    },
+    {
+        "id": 13,
+        "name": "Honda Odyssey",
+        "year": 2019,
+        "model": "EX-L",
+        "seats": 7,
+        "mileage":12,
+        "pricePerDay": 3500,
+        "image": "https://imgs.search.brave.com/qMAev6y3-vLvPoWLxlz798vTw6b9QNIEWvu8wNsR0bU/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9oaXBz/LmhlYXJzdGFwcHMu/Y29tL2htZy1wcm9k/L2ltYWdlcy8yMDIx/LWhvbmRhLW9keXNz/ZXktMzkzLTE1OTg5/MTcwNDAuanBnP2Ny/b3A9MC42MDZ4dzow/LjQ1NHhoOzAuMTM1/eHcsMC40Mzd4aCZy/ZXNpemU9NjQwOio",
+        "about": "Honda Odyssey is a versatile and family-friendly minivan that offers a spacious interior, advanced safety features, and a smooth ride for comfortable family trips."
+    },
+    {
+    "id": 14,
+        "name": "Ford Explorer",
+        "year": 2020,
+        "model": "XLT",
+        "seats": 7,
+        "mileage":11,
+        "pricePerDay": 3000,
+        "image": "https://imgs.search.brave.com/hl3Q_w49BpwaEWysgHDDfGjsZEZhdYv_g_fjoV5b8sc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly93YWxs/cGFwZXJjYXZlLmNv/bS93cC93cDM5MDE4/MzcuanBn",
+        "about": "Ford Explorer is a rugged and spacious SUV that offers a comfortable interior, advanced safety features, and powerful performance for both city driving and off-road adventures."
+    },
+    {
+        "id": 15,
+        "name": "Chevrolet Suburban",
+        "year": 2018,
+        "model": "LT",
+        "seats": 8,
+        "mileage":15,
+        "pricePerDay": 4000,
+        "image": "https://tse2.mm.bing.net/th/id/OIP.AUUkkfilLfKy-YNGoSwRLAHaE4?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3",
+        "about": "Chevrolet Suburban is a full-size SUV that offers a spacious interior, advanced safety features, and powerful performance, making it an ideal choice for large families or group travel."
+    },
+    {
+        "id": 16,
+        "name": "Jeep Grand Cherokee",
+        "year": 2021,
+        "model": "Limited",
+        "seats": 5,
+        "mileage":10,
+        "pricePerDay": 3500,
+        "image": "https://imgs.search.brave.com/L-g_Oz54YRPaNE410vyrzqkc60Q8RD80hrRBTBt8ryI/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zMS5j/ZG4uYXV0b2V2b2x1/dGlvbi5jb20vaW1h/Z2VzL21vZGVscy9K/RUVQX0dyYW5kLUNo/ZXJva2VlLTIwMjFf/bWFpbi5qcGc",
+        "about": "Jeep Grand Cherokee is a rugged and versatile SUV that offers a comfortable interior, advanced safety features, and powerful performance for both city driving and off-road adventures."
+    },
+    {
+        "id": 17,
+        "name": "Toyota Land Cruiser",
+        "year": 2020,
+        "model": "VX",
+        "seats": 7,
+        "mileage":9,
+        "pricePerDay": 5000,
+        "image": "https://imgs.search.brave.com/PjjPF6UuDYzaFoAj4iXGqyJY5FcBma9QGrTrULYT9co/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zY2Vu/ZTcudG95b3RhLmV1/L2lzL2ltYWdlL3Rv/eW90YWV1cm9wZS90/b3lvdGEtbGFuZC1j/cnVpc2VyLWdhbGxl/cnktMDQ_d2lkPTYw/MA",
+        "about": "Toyota Land Cruiser is a legendary SUV known for its durability, off-road capabilities, and luxurious features, making it an excellent choice for adventurous travelers."
     }
 ]
