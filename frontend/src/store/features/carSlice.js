@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-
+import API from '../../api/API.jsx';
 
 // get all cars
 export const getAllCars = createAsyncThunk(

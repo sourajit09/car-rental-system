@@ -1,24 +1,66 @@
-import React from 'react'
+import React from 'react';
 
 const Contact = () => {
   return (
     <>
-    <div className="d-flex flex-column align-items-center justify-content-center" style={{minHeight:'80vh'}}>
-      <img src="https://imgs.search.brave.com/CzaWmbSTc1XvQqKBxWgXFB9qeErZXZ3TcvDmAxdS3uo/rs:fit:500:0:1:0/g:ce/aHR0cHM6Ly9pbWcu/aWNvbnM4LmNvbS9l/eHRlcm5hbC1zbWFz/aGluZ3N0b2Nrcy1m/bGF0LXNtYXNoaW5n/LXN0b2Nrcy8xMjAw/L2V4dGVybmFsLUhl/bHBsaW5lLW9mZmlj/ZS1zbWFzaGluZ3N0/b2Nrcy1mbGF0LXNt/YXNoaW5nLXN0b2Nr/cy5qcGc"  
-     alt="help"
-     height={300} 
-     width={300}
-      />
-      <h2>For Any Assistance</h2>
-      <h2 className="mt-3 text-success">
-        <i className="fa-solid fa-phone-volume"></i>1234567890
-      </h2>
-       <h2 className='mt-3'>
-        <i className="fa-solid fa-envelope"></i>help@carrentalapp.com
-      </h2>
-    </div>
+      <div className="container section-pad" style={{ minHeight: '70vh' }}>
+        <div className="row g-4 align-items-center">
+          <div className="col-md-6">
+            <span className="eyebrow mb-3 d-inline-block">Talk to our team</span>
+            <h2 className="mb-3">Need help with a booking or fleet request?</h2>
+            <p className="text-muted mb-3">
+              We respond fast—whether you need a last-minute car, a long-term lease, or support on the road.
+            </p>
+            <div className="card-soft p-3">
+              <div className="d-flex align-items-center gap-3 mb-2">
+                <div className="feature-icon"><i className="fa-solid fa-phone-volume"></i></div>
+                <div>
+                  <div className="fw-bold">Call us</div>
+                  <div className="text-muted">+91 98765 43210</div>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-3 mb-2">
+                <div className="feature-icon"><i className="fa-solid fa-envelope"></i></div>
+                <div>
+                  <div className="fw-bold">Email</div>
+                  <div className="text-muted">support@carrental.app</div>
+                </div>
+              </div>
+              <div className="d-flex align-items-center gap-3">
+                <div className="feature-icon"><i className="fa-solid fa-location-dot"></i></div>
+                <div>
+                  <div className="fw-bold">Visit</div>
+                  <div className="text-muted">DriveHub, MG Road, Bengaluru</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-6">
+            <div className="card-soft p-4 h-100">
+              <h5 className="mb-3">Drop a note</h5>
+              <form className="row g-3">
+                <div className="col-12">
+                  <label className="form-label">Name</label>
+                  <input type="text" className="form-control" placeholder="Your name" />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Email</label>
+                  <input type="email" className="form-control" placeholder="you@example.com" />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Message</label>
+                  <textarea className="form-control" rows="3" placeholder="How can we help?"></textarea>
+                </div>
+                <div className="col-12">
+                  <button type="button" className="btn btn-primary w-100">Send message</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
-export default Contact
+export default Contact;

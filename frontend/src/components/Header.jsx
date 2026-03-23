@@ -1,12 +1,15 @@
-import React from 'react'
+import React from 'react';
 import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
     <>
-  <nav className="navbar navbar-expand-lg bg-body-tertiary fixed-top">
+  <nav className="navbar navbar-expand-lg fixed-top">
   <div className="container-fluid">
-    <a className="navbar-brand" href="#"> <i className="fa fa-car"></i>Car Rental App</a>
+    <Link className="navbar-brand d-flex align-items-center gap-2" to="/">
+      <div className="brand-pill"><i className="fa-solid fa-car-side"></i></div>
+      <span>Car Rental</span>
+    </Link>
 
     <button
       className="navbar-toggler"
@@ -60,4 +63,4 @@ const Header = () => {
   )
 }
 
-export default Header
+export default Header;
