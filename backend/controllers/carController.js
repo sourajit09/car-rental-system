@@ -1,15 +1,4 @@
-<<<<<<< HEAD
-export const addCar=async(req,res)=>{
-    try {
-        const {name,about,year,seat,mileage,pricePerDay}=req.body
-    } catch (error) {
-        console.log(error);
-        res.status(500).send({
-            success:false,
-            message:"Error in adding car",
-            error
-        })
-=======
+import carModel from "./../models/carModel.js";
 export const addCar = async (req, res) => {
   try {
     const {
@@ -24,6 +13,7 @@ export const addCar = async (req, res) => {
       image,
       status,
       transmission,
+      model,
     } = req.body;
     if (
       !name ||
@@ -33,14 +23,34 @@ export const addCar = async (req, res) => {
       !fuel ||
       !category ||
       !price ||
-      !image
+      !image ||
+      !model
     ) {
       return res.status(500).send({
         success: false,
         message: "Please provide all fields",
       });
->>>>>>> 396770189ea183a0574c3e6001d197c34f782421
     }
+    const car = new carModel({
+      name,
+      about,
+      year,
+      seats,
+      mileage,
+      fuel,
+      category,
+      price,
+      image,
+      status,
+      transmission,
+      model,
+    });
+    await car.save();
+    res.status(201).send({
+      success: true,
+      message: "car has been created",
+      car,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -50,3 +60,79 @@ export const addCar = async (req, res) => {
     });
   }
 };
+
+export const getAllCars=async(req,res)=>{
+  try{
+    const cars=await carModel.find({})
+    res.status(200).send({
+      success:true,
+      message:"All Cars",
+      totalCar:cars.length,
+      cars,
+    })
+  }catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Get all Car API",
+      error,
+    });
+  }
+}
+
+export const getCarDetails=async(req,res)=>{
+  try{
+    const {id}=req.params
+    if(!id){
+      return res.status(404).send({
+        success:false,
+        message:"Car id not found",
+      })
+    }
+    const car=await carModel.findById({_id:id})
+    if(!car){
+      return res.status(404).send({
+        success:false,
+        message:"no car found with this id",
+      })
+    }
+    res.status(200).send({
+      success:true,
+      message:"car details fetched successfully",
+      car
+    })
+  }catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Car details API",
+      error,
+    });
+  }
+}
+
+export const updateCar=async(req,res)=>{
+  try{
+    const {id}=req.params 
+    if(!id){
+      return res.status(404).send({
+        success:false,
+        message:"Car id not found",
+      })
+    }
+    const data=req.body
+    const car=await carModel.findByIdAndUpdate(id,{$set:data},{returnOriginal:false})
+    return res.status(200).send({
+      success:false,
+      message:"Car has updated",
+      car
+    })
+  }catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Car details API",
+      error,
+    });
+  }
+}
