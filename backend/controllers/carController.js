@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 export const addCar=async(req,res)=>{
     try {
         const {name,about,year,seat,mileage,pricePerDay}=req.body
@@ -9,7 +9,7 @@ export const addCar=async(req,res)=>{
             message:"Error in adding car",
             error
         })
-=======
+      }
 export const addCar = async (req, res) => {
   try {
     const {
@@ -39,7 +39,6 @@ export const addCar = async (req, res) => {
         success: false,
         message: "Please provide all fields",
       });
->>>>>>> 396770189ea183a0574c3e6001d197c34f782421
     }
   } catch (error) {
     console.log(error);
@@ -49,4 +48,6 @@ export const addCar = async (req, res) => {
       error,
     });
   }
+}
 };
+    

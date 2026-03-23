@@ -1,8 +1,25 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import CarsData from '../../data/carsData.json'
 import CarCard from '../../components/CarCard'
+import { useDispatch,useSelector } from 'react-redux'
+import { getAllCars } from '../../store/features/carSlice.js'
+
 const Car = () => {
-  
+  const dispatch=useDispatch();
+  const {cars}=useSelector((state)=>state.cars)
+
+  useEffect(()=>{
+    const getcars=async()=>{
+      try {
+        dispatch(getAllCars())
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    getcars()
+  },[dispatch])
+
+
   return (
     <>
     <div style={{minHeight:'80vh',marginTop:'50px'}} >
