@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import AuthImage from "../../assets/images/car.gif";
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import axios from 'axios';
 
 const Login = () => {
 
@@ -12,17 +13,30 @@ const Login = () => {
 
   const navigation = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async(e) => {
     e.preventDefault()
     try {
       if (!email || !password) {
         return toast.error("Please enter email or password");
       }
-      console.log('auth from data',+email+password);
-      setEmail('');
-      setPassword('');
-      toast.success("Login Successful");
-      navigation("/cars")
+      const { data } = await axios.post('http://localhost:8080/api/v1/user/login', {
+        email,
+        password,
+      });
+
+      if (data.success) {
+        // Save token to localStorage
+        localStorage.setItem('token', data.token);
+        // Save user info to localStorage (optional)
+        localStorage.setItem('user', JSON.stringify(data.user));
+
+        toast.success("Login Successful");
+        setEmail('');
+        setPassword('');
+        navigation("/cars");
+      } else {
+        toast.error(data.message);
+      }
     } catch (error) {
       console.log(error)
     }

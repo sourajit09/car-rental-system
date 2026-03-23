@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import AuthImage from "../../assets/images/car.gif";
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router';
+import axios from "axios"
 
 const Register = () => {
 
@@ -12,25 +13,36 @@ const Register = () => {
 
   const navigation = useNavigate()
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    console.log("values:",uname,email,password,phone);
-    
-    try {
-      if (!uname || !email || !password || !phone) {
-         return toast.error("Please provide All fields");
-      }
-      console.log('auth from data',uname+email+phone+password);
+  const handleSubmit = async (e) => {
+  e.preventDefault()
+  try {
+    if (!uname || !email || !password || !phone) {
+      return toast.error("Please provide All fields");
+    }
+
+    const { data } = await axios.post('http://localhost:8080/api/v1/user/register', {
+      uname: uname,
+      email,
+      password,
+      phone,
+    });
+
+    if (data.success) {
+      toast.success("Register Successful");
       setUname('');
       setEmail('');
       setPhone('');
       setPassword('');
-      toast.success("Register Successful");
-      navigation("/login")
-    } catch (error) {
-      console.log(error)
+      navigation("/login");
+    } else {
+      toast.error(data.message);
     }
+
+  } catch (error) {
+    console.log(error);
+    toast.error("Something went wrong");
   }
+}
   return (    
     <div className="container py-5">
       <div className="row align-items-center">

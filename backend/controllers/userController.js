@@ -6,7 +6,7 @@ export const register = async (req, res) => {
   try {
     const { uname, email, password, phone } = req.body;
 
-    if (!uname | !email | !password | !phone) {
+    if (!uname || !email || !password || !phone) {
       return res.status(400).send({
         success: false,
         message: `please provide all fields`,
@@ -49,7 +49,7 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email | !password) {
+    if (!email || !password) {
       return res.status(500).send({
         message: "add email or password",
         success: false,
@@ -69,6 +69,20 @@ export const login = async (req, res) => {
         message: "Invalid credentials",
       });
     }
+      // Generate JWT token
+    const token = JWT.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    user.password = undefined;
+    res.status(200).send({
+      success: true,
+      message: "Login Successful",
+      token,
+      user,
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send({
