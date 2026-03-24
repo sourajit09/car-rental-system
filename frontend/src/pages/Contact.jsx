@@ -1,6 +1,42 @@
-import React from 'react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const Contact = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (!name || !email || !message) {
+        return toast.error("Please provide all fields");
+      }
+      setLoading(true);
+      const { data } = await axios.post('https://api.web3forms.com/submit', {
+        access_key: 'afaf9515-364b-43b2-8e1d-8972f3d2a89e',  // ✅ paste your key here
+        name,
+        email,
+        message,
+      });
+      if (data.success) {
+        toast.success("Message sent successfully!");
+        setName('');
+        setEmail('');
+        setMessage('');
+      } else {
+        toast.error("Failed to send message");
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <div className="container section-pad" style={{ minHeight: '70vh' }}>
@@ -35,28 +71,55 @@ const Contact = () => {
               </div>
             </div>
           </div>
+
           <div className="col-md-6">
             <div className="card-soft p-4 h-100">
               <h5 className="mb-3">Drop a note</h5>
               <form className="row g-3">
                 <div className="col-12">
                   <label className="form-label">Name</label>
-                  <input type="text" className="form-control" placeholder="Your name" />
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label">Email</label>
-                  <input type="email" className="form-control" placeholder="you@example.com" />
+                  <input
+                    type="email"
+                    className="form-control"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
                 <div className="col-12">
                   <label className="form-label">Message</label>
-                  <textarea className="form-control" rows="3" placeholder="How can we help?"></textarea>
+                  <textarea
+                    className="form-control"
+                    rows="3"
+                    placeholder="How can we help?"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
                 </div>
                 <div className="col-12">
-                  <button type="button" className="btn btn-primary w-100">Send message</button>
+                  <button
+                    type="button"
+                    className="btn btn-primary w-100"
+                    onClick={handleSubmit}
+                    disabled={loading}
+                  >
+                    {loading ? "Sending..." : "Send Message"}
+                  </button>
                 </div>
               </form>
             </div>
           </div>
+
         </div>
       </div>
     </>
