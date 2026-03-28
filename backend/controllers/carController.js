@@ -57,7 +57,6 @@ export const addCar = async (req, res) => {
       message: "Car created successfully",
       car,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -79,7 +78,6 @@ export const getAllCars = async (req, res) => {
       totalCar: cars.length,
       cars,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -116,7 +114,6 @@ export const getCarDetails = async (req, res) => {
       message: "Car details fetched successfully",
       car,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).send({
@@ -144,7 +141,7 @@ export const updateCar = async (req, res) => {
     const car = await carModel.findByIdAndUpdate(
       id,
       { $set: data },
-      { new: true }
+      { new: true },
     );
 
     res.status(200).send({
@@ -152,12 +149,36 @@ export const updateCar = async (req, res) => {
       message: "Car updated successfully",
       car,
     });
-
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
       message: "Error in Update Car API",
+      error,
+    });
+  }
+};
+
+export const deleteCar = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(404).send({
+        success: false,
+        message: "Car id not found",
+      });
+    }
+    await carModel.findByIdAndDelete({_id:id})
+    return res.status(200).send({
+      success:true,
+      message:"car has been deleted"
+    })
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error in Delete Car API",
       error,
     });
   }
