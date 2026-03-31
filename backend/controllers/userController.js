@@ -93,6 +93,29 @@ export const login = async (req, res) => {
   }
 };
 
+export const getProfile = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.user.id).select("-password");
+    if(!user){
+      return res.status(404).send({
+        success:false,
+        message:"User not found"
+      });
+    }
+    res.status(200).send({
+      success:true,
+      user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success:false,
+      message:"Error fetching profile",
+      error,
+    });
+  }
+};
+
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -102,11 +125,18 @@ export const updateUser = async (req, res) => {
         message: "User not found",
       });
     }
-    const data = req.body;
+    const data = { ...req.body };
+
+    // hash password if provided
+    if (data.password) {
+      const salt = await bcrypt.genSalt(10);
+      data.password = await bcrypt.hash(data.password, salt);
+    }
+
     const user = await userModel.findByIdAndUpdate(
       id,
       { $set: data },
-      { returnOriginal: false },
+      { new: true },
     );
     res.status(200).send({
       success: true,

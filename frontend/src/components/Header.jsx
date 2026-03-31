@@ -52,6 +52,11 @@ const Header = () => {
          <li className="nav-item">
           <Link className="nav-link " aria-current="page" to="/profile">My Account </Link>
         </li>
+        {JSON.parse(localStorage.getItem('user') || "{}")?.isAdmin && (
+          <li className="nav-item">
+            <Link className="nav-link " aria-current="page" to="/dashboard">Dashboard</Link>
+          </li>
+        )}
 
         {isAuthenticated ? (
           <li className="nav-item">

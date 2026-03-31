@@ -1,22 +1,23 @@
 import mongoose from "mongoose";
 
 const bookingSchema=new mongoose.Schema({
-user:{
+  user:{
     type:mongoose.Schema.Types.ObjectId,
-    requried:true,
+    required:true,
     ref:"user"
-},
-car:{
+  },
+  car:{
     type:mongoose.Schema.Types.ObjectId,
     required:true,
     ref:"car"
-},
-startDate:{type:Date,required:[true,'start date is required']},
-returnDate:{type:Date,reqruied:[true,'return date is required']},
-totalPrice:{type:Number,required:[true,'price is required']},
-status:{type:String,enum:['pending','confirm','cancel'],
+  },
+  startDate:{type:Date,required:[true,'start date is required']},
+  returnDate:{type:Date,required:[true,'return date is required']},
+  price:{type:Number,required:[true,'price is required']}, // per-day or unit price
+  totalPrice:{type:Number,required:[true,'total price is required']},
+  status:{type:String,enum:['pending','confirm','cancel'],
     default:"pending",
-},
+  },
 },{timestamps:true})
 
 const bookingModel=mongoose.model("booking",bookingSchema)

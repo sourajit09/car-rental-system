@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import AuthImage from "../../assets/images/car.gif";
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import API from '../../api/API.jsx';
 
 const Login = () => {
 
@@ -19,7 +19,7 @@ const Login = () => {
       if (!email || !password) {
         return toast.error("Please enter email or password");
       }
-      const { data } = await axios.post('http://localhost:8080/api/v1/user/login', {
+      const { data } = await API.post('/user/login', {
         email,
         password,
       });
@@ -27,7 +27,6 @@ const Login = () => {
       if (data.success) {
         // Save token to localStorage
         localStorage.setItem('token', data.token);
-        // Save user info to localStorage (optional)
         localStorage.setItem('user', JSON.stringify(data.user));
 
         toast.success("Login Successful");
@@ -38,7 +37,7 @@ const Login = () => {
         toast.error(data.message);
       }
     } catch (error) {
-  toast.error(error.response?.data?.message || "Something went wrong");  // ✅
+  toast.error(error.response?.data?.message || "Something went wrong");  
 }
   }
   return (    

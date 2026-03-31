@@ -1,11 +1,35 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import EditModal from '../../components/EditModal'
 import BookingDetailsmodal from '../../components/BookingDetailsmodal'
+import API from '../../api/API.jsx'
+import { toast } from 'react-hot-toast'
 
 const Profile = () => {
 
-  const [editModal, setEditModal] = React.useState(false)
-    const [BookingDetailsModal, setBookingDetailsModal] = React.useState(false)
+  const [editModal, setEditModal] = useState(false)
+  const [bookingDetailsModal, setBookingDetailsModal] = useState(false)
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [bookings, setBookings] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  const user = JSON.parse(localStorage.getItem("user"));
+
+  useEffect(()=>{
+    const fetchBookings = async()=>{
+      try {
+        setLoading(true);
+        const { data } = await API.get("/booking/my");
+        setBookings(data?.bookings || []);
+      } catch (error) {
+        toast.error(error.response?.data?.message || "Failed to load bookings");
+      } finally {
+        setLoading(false);
+      }
+    };
+    if(user?.token || localStorage.getItem("token")){
+      fetchBookings();
+    }
+  },[]);
 
   return (
     <>
@@ -13,9 +37,9 @@ const Profile = () => {
 
         {/* PROFILE DETAILS */}
         <div className="mt-4">
-          <p>Name : Your Name</p>
-          <p>Email : Your Email</p>
-          <p>Phone : Your Phone</p>
+          <p>Name : {user?.uname}</p>
+          <p>Email : {user?.email}</p>
+          <p>Phone : {user?.phone}</p>
 
           <button
             className="btn btn-warning"
@@ -43,18 +67,22 @@ const Profile = () => {
             </thead>
 
             <tbody>
-              <tr>
-                <td>BMW m3</td>
-                <td>01-10-2025</td>
-                <td>Pending</td>
-                <td>
-                  <i
-                    className="fa-solid fa-eye text-primary"
-                    style={{ cursor: "pointer" }}
-                    onClick={()=>setBookingDetailsModal(true)}
-                  ></i>
-                </td>
-              </tr>
+              {loading && <tr><td colSpan="4">Loading...</td></tr>}
+              {!loading && bookings?.length === 0 && <tr><td colSpan="4">No bookings found</td></tr>}
+              {bookings?.map((b)=>(
+                <tr key={b._id}>
+                  <td>{b?.car?.name}</td>
+                  <td>{new Date(b.startDate).toLocaleDateString()}</td>
+                  <td className='text-capitalize'>{b.status}</td>
+                  <td>
+                    <i
+                      className="fa-solid fa-eye text-primary"
+                      style={{ cursor: "pointer" }}
+                      onClick={()=>{setSelectedBooking(b);setBookingDetailsModal(true);}}
+                    ></i>
+                  </td>
+                </tr>
+              ))}
             </tbody>
 
           </table>
@@ -66,14 +94,14 @@ const Profile = () => {
       {/* EDIT PROFILE MODAL */}
       {editModal && (
         <EditModal
-          editModal={editModal}
           setEditModal={setEditModal}
         />
       )}
         {/* BOOKING DETAILS MODAL */}
-     {BookingDetailsModal && (
+     {bookingDetailsModal && (
   <BookingDetailsmodal
     setBookingDetailsModal={setBookingDetailsModal}
+    booking={selectedBooking}
   />
 )}
     </>

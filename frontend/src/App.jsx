@@ -12,6 +12,9 @@ import Header from './components/Header.jsx';
 import  { Toaster } from 'react-hot-toast';
 import CarDetails from "./pages/Car/CarDetails.jsx";
 import Profile from "./pages/user/Profile.jsx";
+import AdminDashboard from "./pages/Admin/Dashboard.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import AdminRoute from "./components/AdminRoute.jsx";
 
 function App() {
   return (
@@ -31,7 +34,8 @@ function App() {
     
         <Route path='/cars' element={<Car />} />
          <Route path='/cars/:id' element={<CarDetails />} />
-          <Route path='/profile' element={<Profile />} />
+          <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path='/dashboard' element={<AdminRoute><AdminDashboard /></AdminRoute>} />
            {/* <Route path='/' element={<Home />} /> */}
       </Routes>
       

@@ -1,4 +1,5 @@
 import React from 'react'
+import { toast } from 'react-hot-toast';
 
 const BookingModal = (prop) => {
 
@@ -18,6 +19,16 @@ const BookingModal = (prop) => {
     }
     return price;
   };
+
+  const onBook = () => {
+    if(!pickupDate || !returnDate){
+      return toast.error("Select pickup and return dates");
+    }
+    if(new Date(returnDate) < new Date(pickupDate)){
+      return toast.error("Return date must be after pickup");
+    }
+    handleBooking();
+  }
 
   return (
     <>
@@ -60,10 +71,10 @@ const BookingModal = (prop) => {
                 />
               </div>
 
-              <p>Price : {price}/- per day</p>
-              <p>Note: please return before 10.00 AM else extra charges will apply</p>
+              <p>Price : ₹{price}/day</p>
+              <p className="text-muted small mb-1">Note: please return before 10.00 AM else extra charges will apply</p>
 
-              <h4>Grand Total : {calculateTotal()}</h4>
+              <h5>Grand Total : ₹{calculateTotal()}</h5>
 
             </div>
 
@@ -80,7 +91,7 @@ const BookingModal = (prop) => {
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={handleBooking}
+                onClick={onBook}
               >
                 Book
               </button>

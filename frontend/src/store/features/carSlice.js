@@ -4,9 +4,13 @@ import API from '../../api/API.jsx';
 // get all cars
 export const getAllCars = createAsyncThunk(
   'car/getAllCars',
-  async (_, thunkAPI) => {
+  async (filters = {}, thunkAPI) => {
     try {
-      const response = await API.get('/cars/get-all');
+      const params = {};
+      if (filters.startDate) params.startDate = filters.startDate;
+      if (filters.returnDate) params.returnDate = filters.returnDate;
+
+      const response = await API.get('/car/get-allcars', { params });
       return response.data;
     } catch (error) {
       const message =

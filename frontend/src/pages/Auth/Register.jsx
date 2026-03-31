@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
 import AuthImage from "../../assets/images/car.gif";
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router';
-import axios from "axios"
+import { useNavigate } from 'react-router-dom';
+import API from "../../api/API.jsx"
 
 const Register = () => {
 
@@ -20,7 +20,7 @@ const Register = () => {
       return toast.error("Please provide All fields");
     }
 
-    const { data } = await axios.post('http://localhost:8080/api/v1/user/register', {
+    const { data } = await API.post('/user/register', {
       uname: uname,
       email,
       password,

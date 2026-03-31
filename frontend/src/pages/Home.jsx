@@ -98,7 +98,7 @@ const Home = () => {
                       <h5 className="mb-1">{car.name}</h5>
                       <div className="pill">Seats {car.seats}</div>
                     </div>
-                    <div className="fw-bold">₹{car.pricePerDay}/day</div>
+                    <div className="fw-bold">₹{car.price}/day</div>
                   </div>
                   <p className="text-muted small mb-3">{car.about.slice(0, 90)}...</p>
                   <Link className="btn btn-primary w-100" to={`/cars/${car.id}`}>View & book</Link>

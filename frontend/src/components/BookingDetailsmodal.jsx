@@ -1,6 +1,6 @@
 import React from "react";
 
-const BookingDetailsmodal = ({ setBookingDetailsModal }) => {
+const BookingDetailsmodal = ({ setBookingDetailsModal, booking }) => {
   return (
     <>
       <div className="modal show d-block" tabIndex="-1">
@@ -17,11 +17,11 @@ const BookingDetailsmodal = ({ setBookingDetailsModal }) => {
             </div>
 
             <div className="modal-body">
-              <p>Journey Date :</p>
-              <p>Return Date :</p>
-              <p>Car Name :</p>
-              <p>Total Price :</p>
-              <p>Booking Status :</p>
+              <p>Journey Date : {booking ? new Date(booking.startDate).toLocaleDateString() : "-"}</p>
+              <p>Return Date : {booking ? new Date(booking.returnDate).toLocaleDateString() : "-"}</p>
+              <p>Car Name : {booking?.car?.name}</p>
+              <p>Total Price : ₹{booking?.totalPrice}</p>
+              <p>Booking Status : {booking?.status}</p>
             </div>
 
           </div>

@@ -3,21 +3,25 @@ import mongoose from "mongoose";
 const userSchema=new mongoose.Schema({
     uname:{
         type:String,
-        require:[true,'username is requried']
+        required:[true,'username is required']
     },
     email:{
         type:String,
-        require:[true,`email is required`],
+        required:[true,`email is required`],
         unique:true
     },
     password:{
         type:String,
-        require:[true,`password is required`]
+        required:[true,`password is required`]
     },
     phone:{
         type:String,
-        require:[true,"phone is required"]
+        required:[true,"phone is required"]
     },
+    isAdmin:{
+        type:Boolean,
+        default:false
+    }
 
 },
 {timestamps:true}

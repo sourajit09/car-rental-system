@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link,useParams } from 'react-router-dom';
+import { Link,useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import CarsData from '../../Data/carsData.json';
 import BookingModal from '../../components/BookingModal';
+import API from '../../api/API.jsx';
+import CarsData from '../../Data/carsData.json';
 
 const CarDetails = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
 
     const [carDetails, setCarDetails] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -14,30 +16,56 @@ const CarDetails = () => {
     const [pickupDate,setPickupDate]=useState(today);
     const [returnDate,setReturnDate]=useState(today);
       
-        // booking function
-        const handleBooking = () =>{
-            toast.success("Car booked successfully");
-            setShow(false);
+    const user = JSON.parse(localStorage.getItem("user"));
+
+    // booking function
+    const handleBooking = async () =>{
+        try {
+            const payload = {
+                car: carDetails?._id,
+                startDate: pickupDate,
+                returnDate: returnDate,
+            };
+            const { data } = await API.post("/booking/create", payload);
+            if(data?.success){
+                toast.success("Car booked successfully");
+                setShow(false);
+            }else{
+                toast.error(data?.message || "Booking failed");
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Booking failed");
+            if(error.response?.status === 401){
+                navigate("/login");
+            }
         }
-        
-const user = JSON.parse(localStorage.getItem("user"));
+    }
+   
    useEffect(() => {
     const getCarDetails = async () => {
         setLoading(true);
-        let getCarInfo = null;  
-
         try {
-            getCarInfo = CarsData.find(
-                car => car.id === parseInt(id)
-            );
+            // if looks like a Mongo ObjectId, hit API, else use fallback JSON
+            if(id && id.length === 24){
+                const { data } = await API.get(`/car/${id}`);
+                setCarDetails(data?.car);
+            } else {
+                const fallback = CarsData.find(car => String(car.id) === String(id));
+                setCarDetails(fallback || null);
+            }
         } catch (error) {
             console.error("Error fetching car details:", error);
+            // try fallback data if API fails
+            const fallback = CarsData.find(car => String(car.id) === String(id));
+            if(fallback){
+                setCarDetails(fallback);
+            } else {
+                toast.error("Could not load car details");
+            }
+        } finally {
+            setLoading(false);
         }
-
-        setCarDetails(getCarInfo);
-        setLoading(false);
     };
-
     getCarDetails();
 }, [id]);
       
@@ -87,7 +115,7 @@ const user = JSON.parse(localStorage.getItem("user"));
                             </tr>
                                 <tr>
                                 <th scope='row'>Price per day</th>
-                                <td>₹{carDetails.pricePerDay}</td>
+                                <td>₹{carDetails.price ?? carDetails.pricePerDay}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -99,7 +127,7 @@ const user = JSON.parse(localStorage.getItem("user"));
     }}>
     <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: '600', opacity: 0.9 }}>Rate</span>
     <span style={{ color: '#fff', fontSize: '1.3rem', fontWeight: '800', letterSpacing: '-0.5px' }}>
-        ₹{carDetails.pricePerDay}
+        ₹{carDetails.price ?? carDetails.pricePerDay}
     </span>
     <span style={{ color: '#fff', fontSize: '0.85rem', fontWeight: '500', opacity: 0.85 }}>/day</span>
 </div>
@@ -118,7 +146,7 @@ const user = JSON.parse(localStorage.getItem("user"));
             </div>
 
             {/* model */}
-            {show && <BookingModal show={show} setShow={setShow} price={carDetails?.pricePerDay}
+            {show && <BookingModal show={show} setShow={setShow} price={carDetails?.price ?? carDetails?.pricePerDay}
             pickupDate={pickupDate} setPickupDate={setPickupDate} 
             returnDate={returnDate} setReturnDate={setReturnDate} 
             handleBooking={handleBooking}

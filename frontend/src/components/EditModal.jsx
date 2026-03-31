@@ -1,15 +1,32 @@
 import React, { useState } from "react";
+import API from "../api/API.jsx";
+import { toast } from "react-hot-toast";
 
 const EditModal = ({ setEditModal }) => {
 
-  const [uname, setUname] = useState("");
-  const [phone, setPhone] = useState("");
+  const user = JSON.parse(localStorage.getItem("user"));
+  const [uname, setUname] = useState(user?.uname || "");
+  const [phone, setPhone] = useState(user?.phone || "");
   const [password, setPassword] = useState("");
 
 
-  const handleUpdate = () => {
-    alert("Profile Updated");
-    setEditModal(false);
+  const handleUpdate = async () => {
+    try {
+      const payload = { uname, phone };
+      if(password) payload.password = password;
+
+      const { data } = await API.patch(`/user/update/${user?._id}`, payload);
+      if(data?.success){
+        const newUser = {...user, uname, phone};
+        localStorage.setItem("user", JSON.stringify(newUser));
+        toast.success("Profile Updated");
+        setEditModal(false);
+      }else{
+        toast.error(data?.message || "Update failed");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Update failed");
+    }
   };
 
   return (
