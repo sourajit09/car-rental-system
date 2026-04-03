@@ -6,6 +6,7 @@ const app=express();
 import userRoutes from "./routes/userRoutes.js"
 import carRoutes from "./routes/carRoutes.js"
 import bookingRoutes from "./routes/bookingRoutes.js"
+import paymentRoutes from "./routes/paymentRoutes.js"
 
 dotenv.config()
 connectDb()
@@ -17,6 +18,7 @@ app.use(express.json())
 app.use("/api/v1/user",userRoutes)
 app.use("/api/v1/car",carRoutes)
 app.use("/api/v1/booking",bookingRoutes)
+app.use("/api/v1/payment",paymentRoutes)
 
 app.get("/",(req,res)=>{
     res.send("this is server")

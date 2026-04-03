@@ -18,6 +18,10 @@ const bookingSchema=new mongoose.Schema({
   status:{type:String,enum:['pending','confirm','cancel'],
     default:"pending",
   },
+   paymentId: {
+    type: String,       // ✅ stores Razorpay payment ID after success
+    default: null,
+  },
 },{timestamps:true})
 
 const bookingModel=mongoose.model("booking",bookingSchema)
