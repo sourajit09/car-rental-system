@@ -4,7 +4,7 @@ import JWT from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try {
-    const { uname, email, password, phone } = req.body;
+    const { uname, email, password, phone, role: roleInput } = req.body;
 
     if (!uname || !email || !password || !phone) {
       return res.status(400).send({
@@ -12,6 +12,9 @@ export const register = async (req, res) => {
         message: `please provide all fields`,
       });
     }
+
+    const role =
+      roleInput === "owner" ? "owner" : "customer";
 
     const existinguser = await userModel.findOne({ email });
     if (existinguser) {
@@ -28,6 +31,7 @@ export const register = async (req, res) => {
       email,
       password: hashedPassword,
       phone,
+      role,
     });
     await user.save();
     user.password = undefined;
@@ -55,9 +59,9 @@ export const login = async (req, res) => {
         success: false,
       });
     }
-    const user = await userModel.findOne({ email });
+    const user = await userModel.findOne({ email }).lean();
     if (!user) {
-      res.status(500).send({
+      return res.status(500).send({
         message: "user not found",
         success: false,
       });
@@ -76,12 +80,14 @@ export const login = async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    user.password = undefined;
+    const { password: _pw, ...userSafe } = user;
+    const role =
+      userSafe.role || (userSafe.isAdmin ? "owner" : "customer");
     res.status(200).send({
       success: true,
       message: "Login Successful",
       token,
-      user,
+      user: { ...userSafe, role },
     });
   } catch (error) {
     console.log(error);
@@ -95,16 +101,21 @@ export const login = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const user = await userModel.findById(req.user.id).select("-password");
+    const user = await userModel.findById(req.user.id).select("-password").lean();
     if(!user){
       return res.status(404).send({
         success:false,
         message:"User not found"
       });
     }
+
+    const role = user.role || (user.isAdmin ? "owner" : "customer");
     res.status(200).send({
       success:true,
-      user,
+      user: {
+        ...user,
+        role,
+      },
     });
   } catch (error) {
     console.log(error);
@@ -125,7 +136,23 @@ export const updateUser = async (req, res) => {
         message: "User not found",
       });
     }
+
+    const isOwnProfile = req.user?.id === id;
+    const canManageUsers = req.user?.isAdmin === true;
+    if (!canManageUsers && !isOwnProfile) {
+      return res.status(403).send({
+        success: false,
+        message: "Not allowed to update this user",
+      });
+    }
+
     const data = { ...req.body };
+
+    if (!canManageUsers) {
+      delete data.isAdmin;
+      delete data.role;
+      delete data.email;
+    }
 
     // hash password if provided
     if (data.password) {
@@ -137,11 +164,22 @@ export const updateUser = async (req, res) => {
       id,
       { $set: data },
       { new: true },
-    );
+    ).select("-password").lean();
+
+    if (!user) {
+      return res.status(404).send({
+        success: false,
+        message: "User not found",
+      });
+    }
+
     res.status(200).send({
       success: true,
       message: "User has been updated",
-      user,
+      user: {
+        ...user,
+        role: user.role || (user.isAdmin ? "owner" : "customer"),
+      },
     });
   } catch (error) {
     console.log(error);

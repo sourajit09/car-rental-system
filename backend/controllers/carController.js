@@ -1,8 +1,29 @@
 import carModel from "./../models/carModel.js";
 import bookingModel from "../models/bookingModel.js";
+import userModel from "../models/userModel.js";
 import { imagekit, isImageKitConfigured } from "../config/imagekit.js";
 
-// ADD CAR
+const listedCarFilter = () => ({
+  owner: { $exists: true, $ne: null },
+});
+
+const canManageCar = async (req, car) => {
+  if (!car) {
+    return false;
+  }
+  const dbUser = await userModel.findById(req.user.id).lean();
+  const isLegacyElevated =
+    dbUser?.isAdmin === true && dbUser?.role !== "owner";
+  if (isLegacyElevated) {
+    return true;
+  }
+  if (dbUser?.role === "owner" && car.owner?.toString() === req.user.id) {
+    return true;
+  }
+  return false;
+};
+
+// ADD CAR (fleet owner)
 export const addCar = async (req, res) => {
   try {
     const {
@@ -18,6 +39,9 @@ export const addCar = async (req, res) => {
       status,
       transmission,
       model,
+      numberPlate,
+      color,
+      vehicleType,
     } = req.body;
 
     if (
@@ -29,11 +53,14 @@ export const addCar = async (req, res) => {
       !category ||
       !price ||
       !image ||
-      !model
+      !model ||
+      !numberPlate ||
+      !color
     ) {
       return res.status(400).send({
         success: false,
-        message: "Please provide all fields",
+        message:
+          "Please provide all fields including number plate and colour",
       });
     }
 
@@ -50,17 +77,28 @@ export const addCar = async (req, res) => {
       status,
       transmission,
       model,
+      numberPlate: String(numberPlate).trim().toUpperCase(),
+      color: String(color).trim(),
+      vehicleType: vehicleType === "bike" ? "bike" : "car",
+      owner: req.user.id,
     });
 
     await car.save();
+    await car.populate("owner", "uname email phone");
 
     res.status(201).send({
       success: true,
-      message: "Car created successfully",
+      message: "Vehicle listed successfully",
       car,
     });
   } catch (error) {
     console.log(error);
+    if (error.code === 11000) {
+      return res.status(400).send({
+        success: false,
+        message: "This number plate is already registered",
+      });
+    }
     res.status(500).send({
       success: false,
       message: "Error in Add Car API",
@@ -69,11 +107,12 @@ export const addCar = async (req, res) => {
   }
 };
 
-//  GET ALL CARS
+// Logged-in customers: marketplace (all owners' listed vehicles)
 export const getAllCars = async (req, res) => {
   try {
     const { startDate, returnDate } = req.query;
     let cars = [];
+    const baseFilter = listedCarFilter();
 
     if (startDate && returnDate) {
       const start = new Date(startDate);
@@ -87,9 +126,16 @@ export const getAllCars = async (req, res) => {
         ],
       }).distinct("car");
 
-      cars = await carModel.find({ _id: { $nin: bookedIds } });
+      cars = await carModel
+        .find({
+          ...baseFilter,
+          _id: { $nin: bookedIds },
+        })
+        .populate("owner", "uname email phone");
     } else {
-      cars = await carModel.find({});
+      cars = await carModel
+        .find(baseFilter)
+        .populate("owner", "uname email phone");
     }
 
     res.status(200).send({
@@ -108,7 +154,31 @@ export const getAllCars = async (req, res) => {
   }
 };
 
-//  GET SINGLE CAR
+// Owner dashboard: only this owner's vehicles
+export const getMyFleet = async (req, res) => {
+  try {
+    const cars = await carModel
+      .find({ owner: req.user.id })
+      .populate("owner", "uname email phone")
+      .sort({ createdAt: -1 });
+
+    res.status(200).send({
+      success: true,
+      message: "Your fleet",
+      totalCar: cars.length,
+      cars,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error loading fleet",
+      error,
+    });
+  }
+};
+
+// GET SINGLE CAR (authenticated)
 export const getCarDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -120,7 +190,9 @@ export const getCarDetails = async (req, res) => {
       });
     }
 
-    const car = await carModel.findById(id);
+    const car = await carModel
+      .findOne({ _id: id, ...listedCarFilter() })
+      .populate("owner", "uname email phone");
 
     if (!car) {
       return res.status(404).send({
@@ -144,7 +216,7 @@ export const getCarDetails = async (req, res) => {
   }
 };
 
-//  UPDATE CAR
+// UPDATE CAR
 export const updateCar = async (req, res) => {
   try {
     const { id } = req.params;
@@ -156,21 +228,48 @@ export const updateCar = async (req, res) => {
       });
     }
 
-    const data = req.body;
+    const car = await carModel.findById(id);
+    if (!car) {
+      return res.status(404).send({
+        success: false,
+        message: "Car not found",
+      });
+    }
 
-    const car = await carModel.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true },
-    );
+    const allowed = await canManageCar(req, car);
+    if (!allowed) {
+      return res.status(403).send({
+        success: false,
+        message: "Not allowed to update this vehicle",
+      });
+    }
+
+    const data = { ...req.body };
+    delete data.owner;
+    if (data.numberPlate) {
+      data.numberPlate = String(data.numberPlate).trim().toUpperCase();
+    }
+    if (data.vehicleType && !["car", "bike"].includes(data.vehicleType)) {
+      delete data.vehicleType;
+    }
+
+    const updated = await carModel
+      .findByIdAndUpdate(id, { $set: data }, { new: true })
+      .populate("owner", "uname email phone");
 
     res.status(200).send({
       success: true,
       message: "Car updated successfully",
-      car,
+      car: updated,
     });
   } catch (error) {
     console.log(error);
+    if (error.code === 11000) {
+      return res.status(400).send({
+        success: false,
+        message: "This number plate is already registered",
+      });
+    }
     res.status(500).send({
       success: false,
       message: "Error in Update Car API",
@@ -189,11 +288,28 @@ export const deleteCar = async (req, res) => {
         message: "Car id not found",
       });
     }
-    await carModel.findByIdAndDelete({_id:id})
+
+    const car = await carModel.findById(id);
+    if (!car) {
+      return res.status(404).send({
+        success: false,
+        message: "Car not found",
+      });
+    }
+
+    const allowed = await canManageCar(req, car);
+    if (!allowed) {
+      return res.status(403).send({
+        success: false,
+        message: "Not allowed to delete this vehicle",
+      });
+    }
+
+    await carModel.findByIdAndDelete({ _id: id });
     return res.status(200).send({
-      success:true,
-      message:"car has been deleted"
-    })
+      success: true,
+      message: "car has been deleted",
+    });
   } catch (error) {
     console.log(error);
     res.status(500).send({

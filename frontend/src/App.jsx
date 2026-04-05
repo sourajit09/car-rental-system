@@ -1,6 +1,5 @@
-import { Link } from "react-router-dom";
 import './App.css'
-import { Routes, Route } from 'react-router-dom';
+import { Navigate, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
 import Contact from './pages/Contact';
@@ -12,9 +11,9 @@ import Header from './components/Header.jsx';
 import  { Toaster } from 'react-hot-toast';
 import CarDetails from "./pages/Car/CarDetails.jsx";
 import Profile from "./pages/user/Profile.jsx";
-import AdminDashboard from "./pages/Admin/Dashboard.jsx";
+import OwnerDashboard from "./pages/Owner/Dashboard.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import AdminRoute from "./components/AdminRoute.jsx";
+import OwnerRoute from "./components/OwnerRoute.jsx";
 
 function App() {
   return (
@@ -33,10 +32,11 @@ function App() {
         <Route path='/register' element={<Register />} />
          {/* <Route path="/register" element={<Register />} /> */}
     
-        <Route path='/cars' element={<Car />} />
-         <Route path='/cars/:id' element={<CarDetails />} />
+        <Route path='/cars' element={<ProtectedRoute><Car /></ProtectedRoute>} />
+         <Route path='/cars/:id' element={<ProtectedRoute><CarDetails /></ProtectedRoute>} />
           <Route path='/profile' element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path='/dashboard' element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path='/owner/dashboard' element={<OwnerRoute><OwnerDashboard /></OwnerRoute>} />
+          <Route path='/dashboard' element={<Navigate to='/owner/dashboard' replace />} />
            {/* <Route path='/' element={<Home />} /> */}
       </Routes>
       
