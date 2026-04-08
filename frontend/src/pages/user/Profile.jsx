@@ -70,9 +70,10 @@ const Profile = () => {
               {loading && <tr><td colSpan="4">Loading...</td></tr>}
               {!loading && bookings?.length === 0 && <tr><td colSpan="4">No bookings found</td></tr>}
               {bookings?.map((b)=>(
+              
                 <tr key={b._id}>
                   <td>{b?.car?.name}</td>
-                  <td>{new Date(b.startDate).toLocaleDateString()}</td>
+                  <td>{`${new Date(b.startDate).toLocaleDateString()}    -    ${new Date(b.returnDate).toLocaleDateString()}`}</td>
                   <td className='text-capitalize'>{b.status}</td>
                   <td>
                     <i

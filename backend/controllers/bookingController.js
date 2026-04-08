@@ -7,7 +7,7 @@ const calculateTotalPrice = (startDate, returnDate, carPrice) => {
   const end = new Date(returnDate);
   const diffDays = Math.max(
     1,
-    Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+    Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)),
   );
   return diffDays * carPrice;
 };
@@ -150,7 +150,7 @@ export const updateBookingStatus = async (req, res) => {
     const booking = await bookingModel.findByIdAndUpdate(
       id,
       { status },
-      { new: true }
+      { new: true },
     );
     if (!booking) {
       return res.status(404).send({

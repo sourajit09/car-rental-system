@@ -1,10 +1,21 @@
-import React from 'react'
-import { toast } from 'react-hot-toast';
-import axios from "axios"
+import React from "react";
+import { toast } from "react-hot-toast";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const BookingModal = (prop) => {
+  const navigate = useNavigate();
 
-  const {  setShow, price, pickupDate, setPickupDate, returnDate, setReturnDate, handleBooking ,carId} = prop;
+  const {
+    setShow,
+    price,
+    pickupDate,
+    setPickupDate,
+    returnDate,
+    setReturnDate,
+    handleBooking,
+    carId,
+  } = prop;
 
   // total
   const calculateTotal = () => {
@@ -12,9 +23,8 @@ const BookingModal = (prop) => {
       const days = Math.max(
         1,
         Math.ceil(
-          (new Date(returnDate) - new Date(pickupDate)) /
-          (1000 * 60 * 60 * 24)
-        )
+          (new Date(returnDate) - new Date(pickupDate)) / (1000 * 60 * 60 * 24),
+        ),
       );
       return days * price;
     }
@@ -31,7 +41,7 @@ const BookingModal = (prop) => {
   //   handleBooking();
   // }
 
-   const handlePayment = async () => {
+  const handlePayment = async () => {
     if (!pickupDate || !returnDate) {
       return toast.error("Select pickup and return dates");
     }
@@ -44,7 +54,7 @@ const BookingModal = (prop) => {
 
       // Step 1 — Create booking first (status: pending)
       const bookingRes = await axios.post(
-        'http://localhost:8080/api/v1/booking/create',
+        "http://localhost:8080/api/v1/booking/create",
         {
           car: carId,
           startDate: pickupDate,
@@ -52,25 +62,24 @@ const BookingModal = (prop) => {
           totalPrice: totalAmount,
         },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
       );
 
       if (!bookingRes.data.success) {
         return toast.error(bookingRes.data.message);
       }
-      
 
       const bookingId = bookingRes.data.booking._id;
-      console.log(bookingId)
+      console.log(bookingId);
 
       // Step 2 — Create Razorpay order
       const orderRes = await axios.post(
-        'http://localhost:8080/api/v1/payment/create-order',
+        "http://localhost:8080/api/v1/payment/create-order",
         { amount: totalAmount },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        }
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
       );
 
       if (!orderRes.data.success) {
@@ -78,22 +87,22 @@ const BookingModal = (prop) => {
       }
 
       const order = orderRes.data.order;
-      const user = JSON.parse(localStorage.getItem('user'));
+      const user = JSON.parse(localStorage.getItem("user"));
 
       // Step 3 — Open Razorpay checkout
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
-        currency: 'INR',
-        name: 'DriveHub',
-        description: 'Car Rental Booking',
+        currency: "INR",
+        name: "Drivease",
+        description: "Car Rental Booking",
         order_id: order.id,
 
         // Step 4 — On payment success
         handler: async (response) => {
           try {
             const verifyRes = await axios.post(
-              'http://localhost:8080/api/v1/payment/verify-payment',
+              "http://localhost:8080/api/v1/payment/verify-payment",
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
@@ -101,12 +110,15 @@ const BookingModal = (prop) => {
                 bookingId,
               },
               {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-              }
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
             );
 
             if (verifyRes.data.success) {
               toast.success("Booking Confirmed! Payment Successful 🎉");
+              navigate("/profile");
               setShow(false);
             } else {
               toast.error("Payment verification failed");
@@ -123,32 +135,29 @@ const BookingModal = (prop) => {
         },
 
         theme: {
-          color: '#0d6efd'  // Bootstrap primary blue
+          color: "#0d6efd", // Bootstrap primary blue
         },
 
         modal: {
           ondismiss: () => {
             toast.error("Payment cancelled");
-          }
-        }
+          },
+        },
       };
 
       const razorpayInstance = new window.Razorpay(options);
       razorpayInstance.open();
-
     } catch (error) {
       console.log(error);
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   };
 
-
   return (
     <>
       <div className="modal d-flex w-50" tabIndex="-1">
         <div className="modal-dialog">
           <div className="modal-content">
-
             <div className="modal-header bg-dark text-light">
               <h5 className="modal-title">Select your journey</h5>
 
@@ -161,9 +170,10 @@ const BookingModal = (prop) => {
             </div>
 
             <div className="modal-body">
-
               <div className="mb-3">
-                <label htmlFor="pickupDate" className="form-label">Pickup Date</label>
+                <label htmlFor="pickupDate" className="form-label">
+                  Pickup Date
+                </label>
                 <input
                   type="date"
                   className="form-control"
@@ -174,7 +184,9 @@ const BookingModal = (prop) => {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="returnDate" className="form-label">Return Date</label>
+                <label htmlFor="returnDate" className="form-label">
+                  Return Date
+                </label>
                 <input
                   type="date"
                   className="form-control"
@@ -185,14 +197,15 @@ const BookingModal = (prop) => {
               </div>
 
               <p>Price : ₹{price}/day</p>
-              <p className="text-muted small mb-1">Note: please return before 10.00 AM else extra charges will apply</p>
+              <p className="text-muted small mb-1">
+                Note: please return before 10.00 AM else extra charges will
+                apply
+              </p>
 
               <h5>Grand Total : ₹{calculateTotal()}</h5>
-
             </div>
 
             <div className="modal-footer">
-
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -208,14 +221,12 @@ const BookingModal = (prop) => {
               >
                 Book
               </button>
-
             </div>
-
           </div>
         </div>
       </div>
     </>
   );
-}
+};
 
 export default BookingModal;
