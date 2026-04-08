@@ -27,6 +27,14 @@ const userSchema=new mongoose.Schema({
         type:String,
         enum:["customer","owner"],
         default:"customer"
+    },
+    passwordResetToken:{
+        type:String,
+        select:false
+    },
+    passwordResetExpiresAt:{
+        type:Date,
+        select:false
     }
 
 },

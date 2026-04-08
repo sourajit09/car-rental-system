@@ -5,6 +5,8 @@ import About from './pages/About.jsx';
 import Contact from './pages/Contact';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword.jsx';
+import ResetPassword from './pages/Auth/ResetPassword.jsx';
 import Car from './pages/Car/Car';
 import Footer from './components/Footer.jsx';
 import Header from './components/Header.jsx';
@@ -30,6 +32,8 @@ function App() {
  
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />
+        <Route path='/forgot-password' element={<ForgotPassword />} />
+        <Route path='/reset-password' element={<ResetPassword />} />
          {/* <Route path="/register" element={<Register />} /> */}
     
         <Route path='/cars' element={<ProtectedRoute><Car /></ProtectedRoute>} />

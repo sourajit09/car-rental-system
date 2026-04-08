@@ -32,7 +32,7 @@ const OwnerRoute = ({ children }) => {
             updateStoredUser(data.user);
           }
         }
-      } catch (_error) {
+      } catch (error) {
         if (!ignore) {
           clearAuthSession();
           setUser(null);

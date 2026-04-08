@@ -115,6 +115,12 @@ const Login = () => {
             />
           </div>
 
+          <div className="text-end mb-3">
+            <Link to={`/forgot-password?role=${selectedRole}`} className="small">
+              Forgot password?
+            </Link>
+          </div>
+
           <button className="btn btn-primary w-100" onClick={handleSubmit}>
             {selectedRole === "owner" ? "Login as owner" : "Login as customer"}
           </button>
