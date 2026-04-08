@@ -1,13 +1,68 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
+import API from "../api/API.jsx";
+import {
+  AUTH_UPDATED_EVENT,
+  clearAuthSession,
+  getStoredToken,
+  getStoredUser,
+  isOwnerUser,
+  updateStoredUser,
+} from "../utils/authStorage.js";
 
 const Header = () => {
   const navigate = useNavigate();
-  const isAuthenticated = Boolean(localStorage.getItem('token'));
+  const [token, setToken] = useState(getStoredToken());
+  const [user, setUser] = useState(getStoredUser());
+
+  useEffect(() => {
+    const syncAuthState = () => {
+      setToken(getStoredToken());
+      setUser(getStoredUser());
+    };
+
+    syncAuthState();
+    window.addEventListener(AUTH_UPDATED_EVENT, syncAuthState);
+    window.addEventListener("storage", syncAuthState);
+
+    return () => {
+      window.removeEventListener(AUTH_UPDATED_EVENT, syncAuthState);
+      window.removeEventListener("storage", syncAuthState);
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const syncCurrentUser = async () => {
+      if (!token) {
+        return;
+      }
+
+      try {
+        const { data } = await API.get("/user/me");
+        if (!ignore && data?.user) {
+          updateStoredUser(data.user);
+        }
+      } catch (error) {
+        if (!ignore && error.response?.status === 401) {
+          clearAuthSession();
+        }
+      }
+    };
+
+    syncCurrentUser();
+
+    return () => {
+      ignore = true;
+    };
+  }, [token]);
+
+  const isAuthenticated = Boolean(token);
+  const isOwner = isOwnerUser(user);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    clearAuthSession();
     navigate('/login');
   };
 
@@ -38,9 +93,11 @@ const Header = () => {
         <li className="nav-item">
           <Link className="nav-link " aria-current="page" to="/">Home </Link>
         </li>
- <li className="nav-item">
-          <Link className="nav-link " aria-current="page" to="/cars">All cars </Link>
-        </li>
+        {isAuthenticated && !isOwner && (
+          <li className="nav-item">
+            <Link className="nav-link " aria-current="page" to="/cars">All vehicles </Link>
+          </li>
+        )}
          <li className="nav-item">
           <Link className="nav-link " aria-current="page" to="/about">About </Link>
         </li>
@@ -49,12 +106,9 @@ const Header = () => {
           <Link className="nav-link " aria-current="page" to="/contact">Contact </Link>
         </li>
 
-         <li className="nav-item">
-          <Link className="nav-link " aria-current="page" to="/profile">My Account </Link>
-        </li>
-        {JSON.parse(localStorage.getItem('user') || "{}")?.isAdmin && (
+        {isAuthenticated && (
           <li className="nav-item">
-            <Link className="nav-link " aria-current="page" to="/dashboard">Dashboard</Link>
+            <Link className="nav-link " aria-current="page" to="/profile">My Account </Link>
           </li>
         )}
 
@@ -80,6 +134,17 @@ const Header = () => {
           </>
         )}
 
+        {isOwner && (
+          <li className="nav-item ms-lg-2">
+            <Link
+              className="btn btn-dark rounded-pill px-3 mt-2 mt-lg-0"
+              aria-current="page"
+              to="/owner/dashboard"
+            >
+              Owner Dashboard
+            </Link>
+          </li>
+        )}
 
       </ul>
 

@@ -18,9 +18,15 @@ const userSchema=new mongoose.Schema({
         type:String,
         required:[true,"phone is required"]
     },
+    // Legacy elevated account (e.g. scripts/makeAdmin). Prefer `role` for new users.
     isAdmin:{
         type:Boolean,
         default:false
+    },
+    role:{
+        type:String,
+        enum:["customer","owner"],
+        default:"customer"
     }
 
 },

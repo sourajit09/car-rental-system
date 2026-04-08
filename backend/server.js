@@ -1,12 +1,14 @@
 import express from "express";
 import cors from "cors"
 import dotenv from "dotenv"
+import { createServer } from "http";
 import { connectDb } from "./config/db.js";
 const app=express();
 import userRoutes from "./routes/userRoutes.js"
 import carRoutes from "./routes/carRoutes.js"
 import bookingRoutes from "./routes/bookingRoutes.js"
 import paymentRoutes from "./routes/paymentRoutes.js"
+import { initLiveLocationWebSocketServer } from "./utils/liveLocationSocket.js";
 
 dotenv.config()
 connectDb()
@@ -26,7 +28,10 @@ app.get("/",(req,res)=>{
 
 
 const port=process.env.PORT
+const server = createServer(app);
+
+initLiveLocationWebSocketServer(server);
  
-app.listen(port,()=>{
+server.listen(port,()=>{
     console.log(`server is running on http://localhost:${port}`);
 })

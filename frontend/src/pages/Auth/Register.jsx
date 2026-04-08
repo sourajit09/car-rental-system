@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import AuthImage from "../../assets/images/car.gif";
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import API from "../../api/API.jsx"
 
 const Register = () => {
@@ -10,6 +10,9 @@ const Register = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [phone, setPhone] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedRole =
+    searchParams.get("role") === "owner" ? "owner" : "customer";
 
   const navigation = useNavigate()
 
@@ -25,6 +28,7 @@ const Register = () => {
       email,
       password,
       phone,
+      role: selectedRole,
     });
 
     if (data.success) {
@@ -33,7 +37,7 @@ const Register = () => {
       setEmail('');
       setPhone('');
       setPassword('');
-      navigation("/login");
+      navigation(`/login?role=${selectedRole}`);
     } else {
       toast.error(data.message);
     }
@@ -62,8 +66,29 @@ const Register = () => {
 
         <div className="col-md-5 bg-light rounded-3 p-4 shadow">
           <h3 className="mb-4 text-center text-dark">
-            Registration Form
+            {selectedRole === "owner" ? "Owner Registration" : "Customer Registration"}
           </h3>
+
+          <div className="d-flex gap-2 mb-4">
+            <button
+              type="button"
+              className={`btn flex-fill ${
+                selectedRole === "customer" ? "btn-dark" : "btn-outline-dark"
+              }`}
+              onClick={() => setSearchParams({ role: "customer" })}
+            >
+              Customer
+            </button>
+            <button
+              type="button"
+              className={`btn flex-fill ${
+                selectedRole === "owner" ? "btn-dark" : "btn-outline-dark"
+              }`}
+              onClick={() => setSearchParams({ role: "owner" })}
+            >
+              Owner
+            </button>
+          </div>
 
           <div className="mb-3">
             <label className="form-label">Enter Your Name</label>
@@ -106,8 +131,12 @@ const Register = () => {
           </div>
 
           <button className="btn btn-primary w-100" onClick={handleSubmit}>
-            Register
+            {selectedRole === "owner" ? "Create owner account" : "Create customer account"}
           </button>
+          <p className="small text-muted text-center mt-3 mb-0">
+            Already have an account?{" "}
+            <Link to={`/login?role=${selectedRole}`}>Login here</Link>
+          </p>
         </div>
 
       </div>

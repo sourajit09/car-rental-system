@@ -1,9 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import CarsData from '../Data/carsData.json';
 import heroCar from '../assets/images/car.gif';
+import {
+  AUTH_UPDATED_EVENT,
+  getStoredToken,
+  getStoredUser,
+  isOwnerUser,
+} from '../utils/authStorage.js';
 
 const Home = () => {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      setLoggedIn(Boolean(getStoredToken()));
+      setIsOwner(isOwnerUser(getStoredUser()));
+    };
+    sync();
+    window.addEventListener(AUTH_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(AUTH_UPDATED_EVENT, sync);
+  }, []);
+
   const highlights = [
     { label: 'Avg. pickup time', value: '8 mins' },
     { label: 'Locations served', value: '45+' },
@@ -17,9 +35,9 @@ const Home = () => {
   ];
 
   const steps = [
-    'Choose your ride from our curated fleet',
-    'Pick dates and location that fit your trip',
-    'Confirm and get your keys—no paperwork surprises',
+    'Sign in to browse vehicles listed by individual owners',
+    'Pick dates and book the car or bike that fits your trip',
+    'Meet the owner and drive—share live location during the rental when you choose',
   ];
 
   return (
@@ -30,11 +48,25 @@ const Home = () => {
             <span className="eyebrow mb-3">Premium Car Rental</span>
             <h1>Book the right car for today’s journey in a few clicks.</h1>
             <p className="lead mb-4">
-              From city commutes to weekend escapes, we keep modern, well‑maintained cars ready
-              so you can focus on where you’re heading, not how you’ll get there.
+              Verified owners list their own cars and bikes with real registration details and pricing.
+              Sign in to explore the marketplace—listings are not shown to guests.
             </p>
             <div className="d-flex gap-3 flex-wrap">
-              <Link to="/cars" className="btn btn-primary px-4 py-2">Browse cars</Link>
+              {loggedIn ? (
+                <Link
+                  to={isOwner ? "/owner/dashboard" : "/cars"}
+                  className="btn btn-primary px-4 py-2"
+                >
+                  {isOwner ? "Open owner dashboard" : "Browse vehicles"}
+                </Link>
+              ) : (
+                <>
+                  <Link to="/login?role=customer" className="btn btn-primary px-4 py-2">Customer login</Link>
+                  <Link to="/register?role=customer" className="btn btn-outline-dark px-4 py-2">Customer sign up</Link>
+                  <Link to="/login?role=owner" className="btn btn-dark px-4 py-2">Owner login</Link>
+                  <Link to="/register?role=owner" className="btn btn-outline-secondary px-4 py-2">Owner sign up</Link>
+                </>
+              )}
               <Link to="/contact" className="btn btn-outline-dark px-4 py-2">Talk to us</Link>
             </div>
             <div className="d-flex gap-3 mt-4 flex-wrap">
@@ -80,31 +112,31 @@ const Home = () => {
 
       <section className="section-pad" style={{ background: '#0f172a', color: '#e2e8f0' }}>
         <div className="container">
-          <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-            <div>
-              <span className="eyebrow mb-2 d-inline-block">Featured fleet</span>
-              <h3 className="mb-1">Our most booked cars this month</h3>
-              <p className="text-muted mb-0">Reliable picks ready to roll—click any card to view details.</p>
+          <div className="row g-4 align-items-center">
+            <div className="col-lg-7">
+              <span className="eyebrow mb-2 d-inline-block">Marketplace</span>
+              <h3 className="mb-3">Listings from many owners in one place</h3>
+              <p className="text-muted mb-0">
+                Each owner sets their own daily price. After you sign in, you can compare vehicles,
+                see registration and colour details, and book the trip that fits you.
+              </p>
             </div>
-            <Link to="/cars" className="btn btn-light">View all cars</Link>
-          </div>
-          <div className="row g-4">
-            {CarsData.slice(0, 3).map((car) => (
-              <div className="col-md-4" key={car.id}>
-                <div className="card-soft p-3 h-100 fleet-card bg-white text-dark">
-                  <img src={car.image} alt={car.name} className="w-100 mb-3" />
-                  <div className="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                      <h5 className="mb-1">{car.name}</h5>
-                      <div className="pill">Seats {car.seats}</div>
-                    </div>
-                    <div className="fw-bold">₹{car.price}/day</div>
-                  </div>
-                  <p className="text-muted small mb-3">{car.about.slice(0, 90)}...</p>
-                  <Link className="btn btn-primary w-100" to={`/cars/${car.id}`}>View & book</Link>
-                </div>
+            <div className="col-lg-5 text-lg-end">
+              {!loggedIn && (
+                <p className="small text-muted mb-2">Start by choosing whether you are an owner or a customer.</p>
+              )}
+              <div className="d-flex flex-wrap gap-2 justify-content-lg-end">
+                <Link to="/login?role=customer" className="btn btn-light">Customer login</Link>
+                <Link to="/register?role=customer" className="btn btn-light">I’m renting (customer)</Link>
+                <Link to="/login?role=owner" className="btn btn-dark">Owner login</Link>
+                <Link to="/register?role=owner" className="btn btn-outline-light">I’m an owner</Link>
+                {loggedIn && (
+                  <Link to={isOwner ? "/owner/dashboard" : "/cars"} className="btn btn-primary">
+                    {isOwner ? "Go to dashboard" : "Go to vehicles"}
+                  </Link>
+                )}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -127,8 +159,20 @@ const Home = () => {
             <div className="col-md-6">
               <div className="card-soft p-4">
                 <h5 className="mb-2">Ready to roll?</h5>
-                <p className="text-muted mb-3">Pick a car and secure your dates now. We’ll have it prepped, cleaned, and fueled.</p>
-                <Link to="/cars" className="btn btn-primary w-100 mb-2">Start booking</Link>
+                <p className="text-muted mb-3">
+                  {loggedIn
+                    ? isOwner
+                      ? 'Open your owner dashboard to list vehicles, manage bookings, and track live customer routes.'
+                      : 'Open the vehicle list to check availability and prices from every owner on the platform.'
+                    : 'Log in or create a customer account first—the catalogue is only available to signed-in users.'}
+                </p>
+                {loggedIn ? (
+                  <Link to={isOwner ? "/owner/dashboard" : "/cars"} className="btn btn-primary w-100 mb-2">
+                    {isOwner ? "Open owner dashboard" : "Browse vehicles"}
+                  </Link>
+                ) : (
+                  <Link to="/login?role=customer" className="btn btn-primary w-100 mb-2">Log in to continue</Link>
+                )}
                 <Link to="/contact" className="btn btn-outline-dark w-100">Need a custom quote?</Link>
               </div>
             </div>

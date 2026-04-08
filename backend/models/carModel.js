@@ -13,9 +13,31 @@ const carSchema=new mongoose.Schema({
     image:{type:String,required:[true,"car image is required"]},
     transmission:{type:String},
     status:{type:String,default:"available"},
+    owner:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"user",
+    },
+    numberPlate:{
+        type:String,
+        trim:true,
+    },
+    color:{
+        type:String,
+        trim:true,
+    },
+    vehicleType:{
+        type:String,
+        enum:["car","bike"],
+        default:"car",
+    },
 
 }
 ,{timestamps:true});
+
+carSchema.index(
+    { numberPlate: 1 },
+    { unique: true, sparse: true },
+);
 
 const carModel=mongoose.model("car",carSchema)
 
