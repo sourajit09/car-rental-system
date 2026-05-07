@@ -10,26 +10,31 @@ export const LIVE_LOCATION_SOCKET_PATH = "/ws/live-location";
 const getBookingUserId = (booking) =>
   String(booking?.user?._id || booking?.user || "");
 
-const getOwnerId = (booking) => {
-  const owner = booking?.owner?._id || booking?.owner || booking?.car?.owner;
-  if (!owner) {
-    return "";
-  }
-  return String(owner._id || owner);
-};
+const getBookingOwnerId = (booking) =>
+  String(
+    booking?.owner?._id ||
+      booking?.owner ||
+      booking?.car?.owner?._id ||
+      booking?.car?.owner ||
+      ""
+  );
 
 const canReceiveBookingUpdate = (booking, client) => {
   if (getBookingUserId(booking) === client.userId) {
     return true;
   }
-  const carOwnerId = getOwnerId(booking);
-  if (carOwnerId && carOwnerId === client.userId) {
+
+  if (client.isAdmin || client.role === "admin") {
     return true;
   }
-  // Platform-style admin (elevated but not registering as fleet owner)
-  if (client.isAdmin && client.role === "customer") {
-    return true;
+
+  if (
+    client.isOwner ||
+    client.role === "owner"
+  ) {
+    return getBookingOwnerId(booking) === client.userId;
   }
+
   return false;
 };
 

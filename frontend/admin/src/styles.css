@@ -1,0 +1,63 @@
+body {
+  padding-top: 76px;
+}
+
+.admin-navbar {
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.admin-auth-page {
+  min-height: calc(100vh - 76px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 430px;
+  gap: 32px;
+  align-items: center;
+  padding: 56px clamp(20px, 5vw, 72px);
+}
+
+.admin-auth-hero {
+  min-height: 560px;
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.42)),
+    url("https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=1400&q=80");
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  display: flex;
+  align-items: end;
+  padding: clamp(24px, 4vw, 52px);
+}
+
+.admin-auth-hero h1 {
+  max-width: 760px;
+  font-size: clamp(2.2rem, 4vw, 4.4rem);
+  line-height: 1.05;
+  margin: 18px 0;
+}
+
+.admin-auth-hero p {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 1.08rem;
+  margin: 0;
+}
+
+.admin-auth-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+  padding: 28px;
+}
+
+@media (max-width: 992px) {
+  .admin-auth-page {
+    grid-template-columns: 1fr;
+    padding-top: 32px;
+  }
+
+  .admin-auth-hero {
+    min-height: 360px;
+  }
+}

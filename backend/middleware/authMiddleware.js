@@ -11,14 +11,14 @@ export const getAuthenticatedUserFromToken = async (token) => {
   }
 
   const inferredRole =
-    dbUser.role ||
-    (dbUser.isAdmin === true ? "owner" : "customer");
-  const isOwner =
-    inferredRole === "owner" || dbUser.isAdmin === true;
+    dbUser.isAdmin === true ? "admin" : dbUser.role || "customer";
+  const isOwner = inferredRole === "owner";
+  const isAdminUser = inferredRole === "admin";
 
   return {
     id: decode.id,
     isAdmin: dbUser.isAdmin === true,
+    isAdminUser,
     isOwner,
     role: inferredRole,
     email: dbUser.email,
@@ -54,26 +54,48 @@ export const authMiddleware = async (req, res, next) => {
   }
 };
 
-// Fleet owner: business operator (role owner) or legacy isAdmin
-export const isAdmin = async (req, res, next) => {
+const getFreshUserRole = (user) =>
+  user?.isAdmin === true ? "admin" : user?.role || "customer";
+
+const requireRole = (allowedRoles, message) => async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.user.id);
-    const isFleetOwner =
-      user &&
-      (user.role === "owner" || user.isAdmin === true);
-    if (!isFleetOwner) {
+    const user = await userModel.findById(req.user.id).lean();
+    const role = getFreshUserRole(user);
+
+    if (!user || !allowedRoles.includes(role)) {
       return res.status(403).send({
         success: false,
-        message: "Owner access required",
+        message,
       });
     }
+
+    req.user = {
+      ...req.user,
+      role,
+      isAdmin: role === "admin",
+      isAdminUser: role === "admin",
+      isOwner: role === "owner",
+    };
+
     next();
   } catch (error) {
     console.log(error);
     res.status(500).send({
       success: false,
-      message: "Error in Admin Auth",
+      message: "Error checking role access",
       error,
     });
   }
 };
+
+export const requireAdmin = requireRole(["admin"], "Admin access required");
+
+export const requireOwner = requireRole(["owner"], "Owner access required");
+
+export const requireOwnerOrAdmin = requireRole(
+  ["owner", "admin"],
+  "Owner or admin access required"
+);
+
+// Backward-compatible name for old imports. Prefer requireAdmin.
+export const isAdmin = requireAdmin;

@@ -15,11 +15,14 @@ export const getUserRole = (user = getStoredUser()) => {
     return null;
   }
 
-  return user.role || (user.isAdmin ? "owner" : "customer");
+  return user.isAdmin ? "admin" : user.role || "customer";
 };
 
 export const isOwnerUser = (user = getStoredUser()) =>
   getUserRole(user) === "owner";
+
+export const isAdminUser = (user = getStoredUser()) =>
+  getUserRole(user) === "admin";
 
 const dispatchAuthUpdated = () => {
   window.dispatchEvent(new Event(AUTH_UPDATED_EVENT));

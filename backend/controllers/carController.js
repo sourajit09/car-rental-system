@@ -12,9 +12,8 @@ const canManageCar = async (req, car) => {
     return false;
   }
   const dbUser = await userModel.findById(req.user.id).lean();
-  const isLegacyElevated =
-    dbUser?.isAdmin === true && dbUser?.role !== "owner";
-  if (isLegacyElevated) {
+  const isAdminUser = dbUser?.isAdmin === true || dbUser?.role === "admin";
+  if (isAdminUser) {
     return true;
   }
   if (dbUser?.role === "owner" && car.owner?.toString() === req.user.id) {
@@ -26,6 +25,13 @@ const canManageCar = async (req, car) => {
 // ADD CAR (fleet owner)
 export const addCar = async (req, res) => {
   try {
+    if (req.user?.role !== "owner") {
+      return res.status(403).send({
+        success: false,
+        message: "Only owners can add vehicles",
+      });
+    }
+
     const {
       name,
       about,
@@ -131,11 +137,11 @@ export const getAllCars = async (req, res) => {
           ...baseFilter,
           _id: { $nin: bookedIds },
         })
-        .populate("owner", "uname email phone");
+        .populate("owner", "_id");
     } else {
       cars = await carModel
         .find(baseFilter)
-        .populate("owner", "uname email phone");
+        .populate("owner", "_id");
     }
 
     res.status(200).send({
@@ -154,17 +160,32 @@ export const getAllCars = async (req, res) => {
   }
 };
 
-// Owner dashboard: only this owner's vehicles
+// Admin dashboard: all owner-listed vehicles
 export const getMyFleet = async (req, res) => {
   try {
+    const dbUser = await userModel.findById(req.user.id).lean();
+    const isAdminUser = dbUser?.isAdmin === true || dbUser?.role === "admin";
+    const isOwnerUser = dbUser?.role === "owner";
+
+    const filter = isOwnerUser
+      ? { ...listedCarFilter(), owner: req.user.id }
+      : listedCarFilter();
+
     const cars = await carModel
-      .find({ owner: req.user.id })
+      .find(filter)
       .populate("owner", "uname email phone")
       .sort({ createdAt: -1 });
 
+    if (!isAdminUser && !isOwnerUser) {
+      return res.status(403).send({
+        success: false,
+        message: "Owner or admin access required",
+      });
+    }
+
     res.status(200).send({
       success: true,
-      message: "Your fleet",
+      message: isOwnerUser ? "Your vehicles" : "All fleet vehicles",
       totalCar: cars.length,
       cars,
     });
@@ -192,7 +213,7 @@ export const getCarDetails = async (req, res) => {
 
     const car = await carModel
       .findOne({ _id: id, ...listedCarFilter() })
-      .populate("owner", "uname email phone");
+      .populate("owner", "_id");
 
     if (!car) {
       return res.status(404).send({

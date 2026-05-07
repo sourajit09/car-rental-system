@@ -8,19 +8,17 @@ dotenv.config();
 const email = process.argv[2]?.trim()?.toLowerCase();
 
 if (!email) {
-  console.error(
-    "Usage: npm run make-admin -- user@example.com"
-  );
+  console.error("Usage: npm run make-owner -- user@example.com");
   process.exit(1);
 }
 
-const promoteUserToAdmin = async () => {
+const promoteUserToOwner = async () => {
   try {
     await connectDb();
 
     const user = await userModel.findOneAndUpdate(
       { email },
-      { $set: { isAdmin: true, role: "admin" } },
+      { $set: { isAdmin: false, role: "owner" } },
       { new: true }
     ).select("uname email phone isAdmin role");
 
@@ -30,18 +28,18 @@ const promoteUserToAdmin = async () => {
       return;
     }
 
-    console.log("Admin dashboard access granted successfully.");
+    console.log("Owner dashboard access granted successfully.");
     console.log(`Name: ${user.uname}`);
     console.log(`Email: ${user.email}`);
     console.log(`Phone: ${user.phone}`);
     console.log(`isAdmin: ${user.isAdmin}`);
     console.log(`role: ${user.role}`);
   } catch (error) {
-    console.error("Failed to grant admin access:", error.message);
+    console.error("Failed to grant owner access:", error.message);
     process.exitCode = 1;
   } finally {
     await mongoose.connection.close();
   }
 };
 
-promoteUserToAdmin();
+promoteUserToOwner();

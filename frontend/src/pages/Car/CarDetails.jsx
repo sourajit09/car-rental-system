@@ -91,8 +91,6 @@ const CarDetails = () => {
     );
   }
 
-  const ownerName =
-    carDetails.owner?.uname || carDetails.owner?.email || "Owner";
   const price = carDetails.price ?? carDetails.pricePerDay;
 
   return (
@@ -113,10 +111,7 @@ const CarDetails = () => {
             </span>
             <h2 className="mb-2">{carDetails.name}</h2>
             <p className="text-muted small mb-1">
-              Listed by <strong>{ownerName}</strong>
-              {carDetails.owner?.phone && (
-                <span className="text-muted"> · {carDetails.owner.phone}</span>
-              )}
+              Listed by <strong>Verified owner</strong>
             </p>
             <p className="text-muted">{carDetails.about}</p>
             <table className="table">

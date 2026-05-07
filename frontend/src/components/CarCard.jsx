@@ -6,7 +6,6 @@ const CarCard = ({ car }) => {
     return null;
   }
 
-  const ownerLabel = car?.owner?.uname || car?.owner?.email || 'Owner'
   const price = car?.price ?? car?.pricePerDay
   const plate = car?.numberPlate
   const color = car?.color
@@ -26,7 +25,7 @@ const CarCard = ({ car }) => {
             <h5 className="card-title mb-0">{car?.name}</h5>
             <span className="badge text-bg-secondary">{typeLabel}</span>
           </div>
-          <p className="text-muted small mb-1">by {ownerLabel}</p>
+          <p className="text-muted small mb-1">Verified owner listing</p>
           {(plate || color) && (
             <p className="small mb-2">
               {plate && <span className="me-2"><strong>{plate}</strong></span>}

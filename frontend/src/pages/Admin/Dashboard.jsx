@@ -38,31 +38,37 @@ const getTrackingState = (booking) => {
   const isFresh = updatedAt ? Date.now() - updatedAt < 60000 : false;
 
   if (booking?.liveLocation?.sharingEnabled && isFresh) {
-    return {
-      label: "Live now",
-      className: "text-bg-success",
-    };
+    return { label: "Live now", className: "text-bg-success" };
   }
 
   if (hasLocation(booking)) {
-    return {
-      label: "Last known",
-      className: "text-bg-secondary",
-    };
+    return { label: "Last known", className: "text-bg-secondary" };
   }
 
-  return {
-    label: "No signal",
-    className: "text-bg-light",
-  };
+  return { label: "No signal", className: "text-bg-light" };
+};
+
+const getStreamStatusMeta = (streamStatus) => {
+  switch (streamStatus) {
+    case "live":
+      return { label: "WebSocket Live", className: "text-bg-success" };
+    case "reconnecting":
+      return { label: "Reconnecting", className: "text-bg-warning" };
+    default:
+      return { label: "Connecting", className: "text-bg-secondary" };
+  }
 };
 
 const mergeBookingById = (currentBookings, incomingBooking) => {
-  const bookingIndex = currentBookings.findIndex(
+  if (!incomingBooking?._id) {
+    return currentBookings;
+  }
+
+  const exists = currentBookings.some(
     (booking) => booking._id === incomingBooking._id
   );
 
-  if (bookingIndex === -1) {
+  if (!exists) {
     return [incomingBooking, ...currentBookings];
   }
 
@@ -71,27 +77,16 @@ const mergeBookingById = (currentBookings, incomingBooking) => {
   );
 };
 
-const getStreamStatusMeta = (streamStatus) => {
-  switch (streamStatus) {
-    case "live":
-      return {
-        label: "WebSocket Live",
-        className: "text-bg-success",
-      };
-    case "reconnecting":
-      return {
-        label: "Reconnecting",
-        className: "text-bg-warning",
-      };
-    default:
-      return {
-        label: "Connecting",
-        className: "text-bg-secondary",
-      };
-  }
-};
+const toBase64 = (file) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 
-const OwnerDashboard = () => {
+const Dashboard = ({ mode = "admin" }) => {
+  const isOwnerMode = mode === "owner";
   const [cars, setCars] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loadingCars, setLoadingCars] = useState(false);
@@ -111,7 +106,7 @@ const OwnerDashboard = () => {
       const { data } = await API.get("/car/my-fleet");
       setCars(data?.cars || []);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Failed to load cars");
+      toast.error(error.response?.data?.message || "Failed to load vehicles");
     } finally {
       setLoadingCars(false);
     }
@@ -119,45 +114,35 @@ const OwnerDashboard = () => {
 
   const fetchBookings = async (showSpinner = true) => {
     try {
-      if (showSpinner) {
-        setLoadingBookings(true);
-      }
+      if (showSpinner) setLoadingBookings(true);
       const { data } = await API.get("/booking/all");
       const fetchedBookings = data?.bookings || [];
       setBookings(fetchedBookings);
-      setTrackedBookingId((currentTrackedBookingId) => {
-        if (
-          currentTrackedBookingId &&
-          fetchedBookings.some(
-            (booking) => booking._id === currentTrackedBookingId
-          )
-        ) {
-          return currentTrackedBookingId;
+      setTrackedBookingId((currentId) => {
+        if (currentId && fetchedBookings.some((booking) => booking._id === currentId)) {
+          return currentId;
         }
 
-        if (fetchedBookings.length === 0) {
-          return null;
-        }
-
-        const firstTrackableBooking =
+        const firstTrackable =
           fetchedBookings.find((booking) => hasLocation(booking)) ||
           fetchedBookings[0];
-
-        return firstTrackableBooking?._id || null;
+        return firstTrackable?._id || null;
       });
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to load bookings");
     } finally {
-      if (showSpinner) {
-        setLoadingBookings(false);
-      }
+      if (showSpinner) setLoadingBookings(false);
     }
   };
 
   useEffect(() => {
     fetchCars();
-    fetchBookings();
 
+    if (isOwnerMode) {
+      return undefined;
+    }
+
+    fetchBookings();
     const token = localStorage.getItem("token");
     const socketUrl = buildLiveLocationSocketUrl(API.defaults.baseURL, token);
 
@@ -169,24 +154,18 @@ const OwnerDashboard = () => {
     let isActive = true;
 
     const connectSocket = () => {
-      if (!isActive) {
-        return;
-      }
+      if (!isActive) return;
 
       const socket = new WebSocket(socketUrl);
       socketRef.current = socket;
 
       socket.onopen = () => {
-        if (isActive) {
-          setStreamStatus("live");
-        }
+        if (isActive) setStreamStatus("live");
       };
 
       socket.onmessage = (event) => {
         const message = parseLiveLocationSocketMessage(event);
-        if (!message) {
-          return;
-        }
+        if (!message) return;
 
         if (message.type === "connection") {
           setStreamStatus("live");
@@ -197,29 +176,20 @@ const OwnerDashboard = () => {
           setBookings((currentBookings) =>
             mergeBookingById(currentBookings, message.booking)
           );
-          setTrackedBookingId(
-            (currentTrackedBookingId) =>
-              currentTrackedBookingId || message.booking._id
-          );
+          setTrackedBookingId((currentId) => currentId || message.booking._id);
           setStreamStatus("live");
         }
       };
 
       socket.onerror = () => {
-        if (isActive) {
-          setStreamStatus("reconnecting");
-        }
+        if (isActive) setStreamStatus("reconnecting");
       };
 
       socket.onclose = () => {
         if (socketRef.current === socket) {
           socketRef.current = null;
         }
-
-        if (!isActive) {
-          return;
-        }
-
+        if (!isActive) return;
         setStreamStatus("reconnecting");
         reconnectTimerRef.current = setTimeout(connectSocket, SOCKET_RECONNECT_MS);
       };
@@ -229,23 +199,21 @@ const OwnerDashboard = () => {
 
     return () => {
       isActive = false;
-      if (reconnectTimerRef.current) {
-        clearTimeout(reconnectTimerRef.current);
-      }
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (socketRef.current) socketRef.current.close();
     };
-  }, []);
+  }, [isOwnerMode]);
 
   const trackedBooking =
     bookings.find((booking) => booking._id === trackedBookingId) || null;
   const streamStatusMeta = getStreamStatusMeta(streamStatus);
 
-  const handleCarSubmit = async (e) => {
-    e.preventDefault();
+  const handleCarSubmit = async (event) => {
+    event.preventDefault();
+
     try {
       let imageUrl = form.image;
+
       if (imageFile) {
         setUploading(true);
         const base64 = await toBase64(imageFile);
@@ -261,15 +229,12 @@ const OwnerDashboard = () => {
 
       if (editingId) {
         const { data } = await API.patch(`/car/update-car/${editingId}`, payload);
-        if (data?.success) {
-          toast.success("Vehicle updated");
-        }
+        if (data?.success) toast.success("Vehicle updated");
       } else {
         const { data } = await API.post("/car/add-car", payload);
-        if (data?.success) {
-          toast.success("Vehicle added");
-        }
+        if (data?.success) toast.success("Vehicle added");
       }
+
       setForm(initialCar);
       setEditingId(null);
       setImageFile(null);
@@ -283,34 +248,28 @@ const OwnerDashboard = () => {
   const handleEdit = (car) => {
     setEditingId(car._id);
     setForm({
-      name: car.name,
-      model: car.model,
-      year: car.year,
-      category: car.category,
-      fuel: car.fuel,
-      mileage: car.mileage,
-      price: car.price,
-      seats: car.seats,
-      about: car.about,
-      image: car.image,
+      name: car.name || "",
+      model: car.model || "",
+      year: car.year || "",
+      category: car.category || "",
+      fuel: car.fuel || "",
+      mileage: car.mileage || "",
+      price: car.price || "",
+      seats: car.seats || "",
+      about: car.about || "",
+      image: car.image || "",
       transmission: car.transmission || "",
       status: car.status || "available",
       numberPlate: car.numberPlate || "",
       color: car.color || "",
       vehicleType: car.vehicleType === "bike" ? "bike" : "car",
     });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const toBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this car?")) return;
+    if (!window.confirm("Delete this vehicle?")) return;
+
     try {
       const { data } = await API.delete(`/car/delete-car/${id}`);
       if (data?.success) {
@@ -324,9 +283,7 @@ const OwnerDashboard = () => {
 
   const handleStatusChange = async (bookingId, status) => {
     try {
-      const { data } = await API.patch(`/booking/status/${bookingId}`, {
-        status,
-      });
+      const { data } = await API.patch(`/booking/status/${bookingId}`, { status });
       if (data?.success) {
         toast.success("Status updated");
         fetchBookings(false);
@@ -336,294 +293,287 @@ const OwnerDashboard = () => {
     }
   };
 
+  const showVehicleForm = isOwnerMode || editingId;
+
   return (
     <div className="container section-pad">
-      <h3 className="mb-4">Owner Dashboard</h3>
+      <h3 className="mb-4">{isOwnerMode ? "Owner Dashboard" : "Admin Dashboard"}</h3>
 
-      <div className="card mb-4 border-0 shadow-sm">
-        <div className="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
-          <div>
-            <h5 className="mb-2">Business live tracking</h5>
-            <p className="text-muted mb-0">
-              This dashboard now listens over WebSocket, so the owner can watch
-              the renter move on the map in realtime like a delivery-tracking
-              console instead of waiting for polling.
-            </p>
+      {!isOwnerMode && (
+        <>
+          <div className="card mb-4 border-0 shadow-sm">
+            <div className="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div>
+                <h5 className="mb-2">Business live tracking</h5>
+                <p className="text-muted mb-0">
+                  Admin can watch active renter movement in realtime and manage
+                  booking status from one control panel.
+                </p>
+              </div>
+              <span className={`badge ${streamStatusMeta.className}`}>
+                {streamStatusMeta.label}
+              </span>
+            </div>
           </div>
-          <span className={`badge ${streamStatusMeta.className}`}>
-            {streamStatusMeta.label}
-          </span>
-        </div>
-      </div>
 
-      <div className="card mb-4">
-        <div className="card-header bg-dark text-white">Live Tracking Map</div>
-        <div className="card-body">
-          {trackedBooking ? (
-            <>
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-                <div>
-                  <strong>{trackedBooking?.car?.name || "Unknown car"}</strong>
-                  <div className="text-muted">
-                    {trackedBooking?.user?.uname || trackedBooking?.user?.email}
+          <div className="card mb-4">
+            <div className="card-header bg-dark text-white">Live Tracking Map</div>
+            <div className="card-body">
+              {trackedBooking ? (
+                <>
+                  <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                    <div>
+                      <strong>{trackedBooking?.car?.name || "Unknown vehicle"}</strong>
+                      <div className="text-muted">
+                        {trackedBooking?.user?.uname || trackedBooking?.user?.email}
+                      </div>
+                    </div>
+                    <span className={`badge ${getTrackingState(trackedBooking).className}`}>
+                      {getTrackingState(trackedBooking).label}
+                    </span>
                   </div>
-                </div>
-                <span
-                  className={`badge ${getTrackingState(trackedBooking).className}`}
+
+                  <div className="row g-3 mb-3">
+                    <div className="col-md-3">
+                      <div className="border rounded p-3 h-100">
+                        <strong>Customer Phone</strong>
+                        <div className="text-muted">{trackedBooking?.user?.phone || "--"}</div>
+                      </div>
+                    </div>
+                    <div className="col-md-3">
+                      <div className="border rounded p-3 h-100">
+                        <strong>Accuracy</strong>
+                        <div className="text-muted">
+                          {trackedBooking?.liveLocation?.accuracy
+                            ? `${Math.round(trackedBooking.liveLocation.accuracy)} m`
+                            : "--"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-3">
+                      <div className="border rounded p-3 h-100">
+                        <strong>Last Update</strong>
+                        <div className="text-muted">
+                          {trackedBooking?.liveLocation?.updatedAt
+                            ? new Date(trackedBooking.liveLocation.updatedAt).toLocaleString()
+                            : "--"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="col-md-3">
+                      <div className="border rounded p-3 h-100">
+                        <strong>Coordinates</strong>
+                        <div className="text-muted">
+                          {hasLocation(trackedBooking)
+                            ? `${Number(trackedBooking.liveLocation.latitude).toFixed(5)}, ${Number(
+                                trackedBooking.liveLocation.longitude
+                              ).toFixed(5)}`
+                            : "--"}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <LiveLocationMap
+                    title={`${trackedBooking?.car?.name || "Vehicle"} live location`}
+                    latitude={
+                      hasLocation(trackedBooking)
+                        ? Number(trackedBooking.liveLocation.latitude)
+                        : undefined
+                    }
+                    longitude={
+                      hasLocation(trackedBooking)
+                        ? Number(trackedBooking.liveLocation.longitude)
+                        : undefined
+                    }
+                    height={380}
+                  />
+                </>
+              ) : (
+                <p className="mb-0 text-muted">
+                  Pick a booking from the table below to see its current map.
+                </p>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {showVehicleForm && (
+        <div className="card mb-4">
+          <div className="card-header bg-dark text-white">
+            {editingId ? "Edit Vehicle" : "Add New Vehicle"}
+          </div>
+          <div className="card-body">
+            <form className="row g-3" onSubmit={handleCarSubmit}>
+              <div className="col-md-4">
+                <label className="form-label">Vehicle type</label>
+                <select
+                  className="form-select"
+                  value={form.vehicleType}
+                  onChange={(e) => setForm({ ...form, vehicleType: e.target.value })}
                 >
-                  {getTrackingState(trackedBooking).label}
-                </span>
+                  <option value="car">Car</option>
+                  <option value="bike">Bike</option>
+                </select>
               </div>
-
-              <div className="row g-3 mb-3">
-                <div className="col-md-3">
-                  <div className="border rounded p-3 h-100">
-                    <strong>Customer Phone</strong>
-                    <div className="text-muted">
-                      {trackedBooking?.user?.phone || "--"}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="border rounded p-3 h-100">
-                    <strong>Accuracy</strong>
-                    <div className="text-muted">
-                      {trackedBooking?.liveLocation?.accuracy
-                        ? `${Math.round(trackedBooking.liveLocation.accuracy)} m`
-                        : "--"}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="border rounded p-3 h-100">
-                    <strong>Last Update</strong>
-                    <div className="text-muted">
-                      {trackedBooking?.liveLocation?.updatedAt
-                        ? new Date(
-                            trackedBooking.liveLocation.updatedAt
-                          ).toLocaleString()
-                        : "--"}
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-3">
-                  <div className="border rounded p-3 h-100">
-                    <strong>Coordinates</strong>
-                    <div className="text-muted">
-                      {hasLocation(trackedBooking)
-                        ? `${Number(
-                            trackedBooking.liveLocation.latitude
-                          ).toFixed(5)}, ${Number(
-                            trackedBooking.liveLocation.longitude
-                          ).toFixed(5)}`
-                        : "--"}
-                    </div>
-                  </div>
-                </div>
+              <div className="col-md-4">
+                <label className="form-label">Number plate</label>
+                <input
+                  className="form-control"
+                  value={form.numberPlate}
+                  onChange={(e) => setForm({ ...form, numberPlate: e.target.value })}
+                  placeholder="e.g. KA01AB1234"
+                  required
+                  disabled={Boolean(editingId)}
+                />
+                {editingId && <small className="text-muted">Plate cannot be changed</small>}
               </div>
-
-              <LiveLocationMap
-                title={`${trackedBooking?.car?.name || "Car"} live location`}
-                latitude={
-                  hasLocation(trackedBooking)
-                    ? Number(trackedBooking.liveLocation.latitude)
-                    : undefined
-                }
-                longitude={
-                  hasLocation(trackedBooking)
-                    ? Number(trackedBooking.liveLocation.longitude)
-                    : undefined
-                }
-                height={380}
-              />
-            </>
-          ) : (
-            <p className="mb-0 text-muted">
-              Pick a booking from the table below to see its current map.
-            </p>
-          )}
+              <div className="col-md-4">
+                <label className="form-label">Colour</label>
+                <input
+                  className="form-control"
+                  value={form.color}
+                  onChange={(e) => setForm({ ...form, color: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Name</label>
+                <input
+                  className="form-control"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Model</label>
+                <input
+                  className="form-control"
+                  value={form.model}
+                  onChange={(e) => setForm({ ...form, model: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Year</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.year}
+                  onChange={(e) => setForm({ ...form, year: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Category</label>
+                <input
+                  className="form-control"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Fuel</label>
+                <input
+                  className="form-control"
+                  value={form.fuel}
+                  onChange={(e) => setForm({ ...form, fuel: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Mileage</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.mileage}
+                  onChange={(e) => setForm({ ...form, mileage: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Seats</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.seats}
+                  onChange={(e) => setForm({ ...form, seats: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Price / day</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={form.price}
+                  onChange={(e) => setForm({ ...form, price: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-md-4">
+                <label className="form-label">Transmission</label>
+                <input
+                  className="form-control"
+                  value={form.transmission}
+                  onChange={(e) => setForm({ ...form, transmission: e.target.value })}
+                />
+              </div>
+              <div className="col-md-8">
+                <label className="form-label">Image URL or Upload</label>
+                <input
+                  className="form-control mb-2"
+                  value={form.image}
+                  onChange={(e) => setForm({ ...form, image: e.target.value })}
+                  placeholder="Paste image URL or upload below"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="form-control"
+                  onChange={(e) => setImageFile(e.target.files[0])}
+                />
+                {uploading && <small className="text-muted">Uploading...</small>}
+              </div>
+              <div className="col-12">
+                <label className="form-label">About</label>
+                <textarea
+                  className="form-control"
+                  rows="2"
+                  value={form.about}
+                  onChange={(e) => setForm({ ...form, about: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="col-12 d-flex gap-2">
+                <button className="btn btn-primary" type="submit">
+                  {editingId ? "Update" : "Add Vehicle"}
+                </button>
+                {editingId && (
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setForm(initialCar);
+                      setEditingId(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="card mb-4">
         <div className="card-header bg-dark text-white">
-          {editingId ? "Edit Vehicle" : "Add New Vehicle"}
+          {isOwnerMode ? "Your Vehicles" : "Fleet Vehicles"}
         </div>
-        <div className="card-body">
-          <form className="row g-3" onSubmit={handleCarSubmit}>
-            <div className="col-md-4">
-              <label className="form-label">Vehicle type</label>
-              <select
-                className="form-select"
-                value={form.vehicleType}
-                onChange={(e) =>
-                  setForm({ ...form, vehicleType: e.target.value })
-                }
-              >
-                <option value="car">Car</option>
-                <option value="bike">Bike</option>
-              </select>
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Number plate</label>
-              <input
-                className="form-control"
-                value={form.numberPlate}
-                onChange={(e) =>
-                  setForm({ ...form, numberPlate: e.target.value })
-                }
-                placeholder="e.g. KA01AB1234"
-                required
-                disabled={Boolean(editingId)}
-              />
-              {editingId && (
-                <small className="text-muted">Plate cannot be changed</small>
-              )}
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Colour</label>
-              <input
-                className="form-control"
-                value={form.color}
-                onChange={(e) => setForm({ ...form, color: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Name</label>
-              <input
-                className="form-control"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Model</label>
-              <input
-                className="form-control"
-                value={form.model}
-                onChange={(e) => setForm({ ...form, model: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Year</label>
-              <input
-                type="number"
-                className="form-control"
-                value={form.year}
-                onChange={(e) => setForm({ ...form, year: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Category</label>
-              <input
-                className="form-control"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Fuel</label>
-              <input
-                className="form-control"
-                value={form.fuel}
-                onChange={(e) => setForm({ ...form, fuel: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Mileage</label>
-              <input
-                type="number"
-                className="form-control"
-                value={form.mileage}
-                onChange={(e) => setForm({ ...form, mileage: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Seats</label>
-              <input
-                type="number"
-                className="form-control"
-                value={form.seats}
-                onChange={(e) => setForm({ ...form, seats: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Price / day</label>
-              <input
-                type="number"
-                className="form-control"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                required
-              />
-            </div>
-            <div className="col-md-4">
-              <label className="form-label">Transmission</label>
-              <input
-                className="form-control"
-                value={form.transmission}
-                onChange={(e) =>
-                  setForm({ ...form, transmission: e.target.value })
-                }
-              />
-            </div>
-            <div className="col-md-8">
-              <label className="form-label">Image URL or Upload</label>
-              <input
-                className="form-control mb-2"
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                placeholder="Paste image URL or upload below"
-              />
-              <input
-                type="file"
-                accept="image/*"
-                className="form-control"
-                onChange={(e) => setImageFile(e.target.files[0])}
-              />
-              {uploading && <small className="text-muted">Uploading...</small>}
-            </div>
-            <div className="col-12">
-              <label className="form-label">About</label>
-              <textarea
-                className="form-control"
-                rows="2"
-                value={form.about}
-                onChange={(e) => setForm({ ...form, about: e.target.value })}
-                required
-              ></textarea>
-            </div>
-            <div className="col-12 d-flex gap-2">
-              <button className="btn btn-primary" type="submit">
-                {editingId ? "Update" : "Add Car"}
-              </button>
-              {editingId && (
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() => {
-                    setForm(initialCar);
-                    setEditingId(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              )}
-            </div>
-          </form>
-        </div>
-      </div>
-
-      <div className="card mb-4">
-        <div className="card-header bg-dark text-white">Your Vehicles</div>
         <div className="card-body table-responsive">
           {loadingCars ? (
             <p>Loading vehicles...</p>
@@ -633,6 +583,7 @@ const OwnerDashboard = () => {
                 <tr>
                   <th>Type</th>
                   <th>Name</th>
+                  <th>Owner</th>
                   <th>Plate</th>
                   <th>Color</th>
                   <th>Model</th>
@@ -642,34 +593,37 @@ const OwnerDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {cars?.map((car) => (
+                {cars.map((car) => (
                   <tr key={car._id}>
                     <td className="text-capitalize">{car.vehicleType || "car"}</td>
                     <td>{car.name}</td>
+                    <td>{car.owner?.uname || car.owner?.email || "--"}</td>
                     <td>{car.numberPlate || "--"}</td>
                     <td>{car.color || "--"}</td>
                     <td>{car.model}</td>
                     <td>{car.year}</td>
                     <td>₹{car.price}</td>
-                    <td className="d-flex gap-2">
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => handleEdit(car)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(car._id)}
-                      >
-                        Delete
-                      </button>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <button
+                          className="btn btn-sm btn-outline-primary"
+                          onClick={() => handleEdit(car)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => handleDelete(car._id)}
+                        >
+                          Delete
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
-                {cars?.length === 0 && (
+                {cars.length === 0 && (
                   <tr>
-                    <td colSpan="8">No vehicles found</td>
+                    <td colSpan="9">No vehicles found</td>
                   </tr>
                 )}
               </tbody>
@@ -678,84 +632,105 @@ const OwnerDashboard = () => {
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-          <span>Bookings</span>
-          <button
-            className="btn btn-sm btn-outline-light"
-            onClick={() => fetchBookings(false)}
-          >
-            Refresh tracking
-          </button>
-        </div>
-        <div className="card-body table-responsive">
-          {loadingBookings ? (
-            <p>Loading bookings...</p>
-          ) : (
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Car</th>
-                  <th>Start</th>
-                  <th>Return</th>
-                  <th>Status</th>
-                  <th>Tracking</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {bookings?.map((booking) => {
-                  const trackingState = getTrackingState(booking);
+      {!isOwnerMode && (
+        <div className="card">
+          <div className="card-header bg-dark text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>Bookings</span>
+            <button
+              className="btn btn-sm btn-outline-light"
+              onClick={() => fetchBookings(false)}
+            >
+              Refresh tracking
+            </button>
+          </div>
+          <div className="card-body table-responsive">
+            {loadingBookings ? (
+              <p>Loading bookings...</p>
+            ) : (
+              <table className="table table-striped">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Vehicle</th>
+                    <th>Owner</th>
+                    <th>Start</th>
+                    <th>Return</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Tracking</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bookings.map((booking) => {
+                    const trackingState = getTrackingState(booking);
 
-                  return (
-                    <tr key={booking._id}>
-                      <td>{booking?.user?.email}</td>
-                      <td>{booking?.car?.name}</td>
-                      <td>{new Date(booking.startDate).toLocaleDateString()}</td>
-                      <td>{new Date(booking.returnDate).toLocaleDateString()}</td>
-                      <td className="text-capitalize">{booking.status}</td>
-                      <td>
-                        <span className={`badge ${trackingState.className}`}>
-                          {trackingState.label}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="d-flex gap-2">
-                          <select
-                            className="form-select form-select-sm"
-                            value={booking.status}
-                            onChange={(e) =>
-                              handleStatusChange(booking._id, e.target.value)
-                            }
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirm">Confirm</option>
-                            <option value="cancel">Cancel</option>
-                          </select>
-                          <button
-                            className="btn btn-sm btn-outline-dark"
-                            onClick={() => setTrackedBookingId(booking._id)}
-                          >
-                            Track
-                          </button>
-                        </div>
-                      </td>
+                    return (
+                      <tr key={booking._id}>
+                        <td>{booking?.user?.email}</td>
+                        <td>{booking?.car?.name}</td>
+                        <td>
+                          {booking?.car?.owner?.uname ||
+                            booking?.car?.owner?.email ||
+                            "--"}
+                        </td>
+                        <td>{new Date(booking.startDate).toLocaleDateString()}</td>
+                        <td>{new Date(booking.returnDate).toLocaleDateString()}</td>
+                        <td>₹{booking.totalPrice || booking.price || 0}</td>
+                        <td>
+                          {booking.paymentId ? (
+                            <span className="badge text-bg-success">Paid</span>
+                          ) : (
+                            <span className="badge text-bg-warning">Pending</span>
+                          )}
+                          {booking.paymentId && (
+                            <div className="small text-muted">{booking.paymentId}</div>
+                          )}
+                        </td>
+                        <td className="text-capitalize">{booking.status}</td>
+                        <td>
+                          <span className={`badge ${trackingState.className}`}>
+                            {trackingState.label}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="d-flex gap-2">
+                            <select
+                              className="form-select form-select-sm"
+                              value={booking.status}
+                              onChange={(e) =>
+                                handleStatusChange(booking._id, e.target.value)
+                              }
+                            >
+                              <option value="pending">Pending</option>
+                              <option value="confirm">Confirm</option>
+                              <option value="cancel">Cancel</option>
+                            </select>
+                            <button
+                              className="btn btn-sm btn-outline-dark"
+                              onClick={() => setTrackedBookingId(booking._id)}
+                            >
+                              Track
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {bookings.length === 0 && (
+                    <tr>
+                      <td colSpan="10">No bookings found</td>
                     </tr>
-                  );
-                })}
-                {bookings?.length === 0 && (
-                  <tr>
-                    <td colSpan="7">No bookings found</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                  )}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
 
-export default OwnerDashboard;
+export default Dashboard;

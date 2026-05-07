@@ -1,6 +1,5 @@
 import bookingModel from "../models/bookingModel.js";
 import carModel from "../models/carModel.js";
-import userModel from "../models/userModel.js";
 import { saveBookingLocationUpdate } from "../services/bookingTrackingService.js";
 import { broadcastBookingLocation } from "../utils/liveLocationSocket.js";
 
@@ -15,24 +14,22 @@ const calculateTotalPrice = (startDate, returnDate, carPrice) => {
   return diffDays * carPrice;
 };
 
-const isLegacyElevatedUser = (user) =>
-  user?.isAdmin === true && user?.role !== "owner";
+const isAdminUser = (user) =>
+  user?.isAdmin === true || user?.role === "admin";
 
-const canOwnerManageBooking = (booking, user) => {
+const canManageBooking = (booking, user) => {
   if (!booking || !user?.id) {
     return false;
   }
 
-  if (isLegacyElevatedUser(user)) {
+  if (isAdminUser(user)) {
     return true;
   }
 
   if (booking.user?.toString() === user.id) {
     return true;
   }
-
-  const ownerId = booking.owner?._id || booking.owner || booking.car?.owner?._id || booking.car?.owner;
-  return String(ownerId || "") === user.id;
+  return false;
 };
 
 // Create booking
@@ -138,20 +135,11 @@ export const getMyBookings = async (req, res) => {
   }
 };
 
-// Owner/Admin: bookings (fleet owners see only their vehicles' trips)
+// Admin: bookings across the platform
 export const getAllBookings = async (req, res) => {
   try {
-    const dbUser = await userModel.findById(req.user.id).lean();
-    const isLegacyElevated = isLegacyElevatedUser(dbUser);
-
-    let query = {};
-    if (!isLegacyElevated && dbUser?.role === "owner") {
-      const myCarIds = await carModel.find({ owner: req.user.id }).distinct("_id");
-      query = { car: { $in: myCarIds } };
-    }
-
     const bookings = await bookingModel
-      .find(query)
+      .find({})
       .populate("user", "uname email phone")
       .populate({
         path: "car",
@@ -172,7 +160,34 @@ export const getAllBookings = async (req, res) => {
   }
 };
 
-// Update booking status (owner / admin)
+// Owner: bookings for their own vehicles
+export const getOwnerBookings = async (req, res) => {
+  try {
+    const bookings = await bookingModel
+      .find({ owner: req.user.id })
+      .populate("user", "uname email phone")
+      .populate({
+        path: "car",
+        populate: { path: "owner", select: "uname email phone" },
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).send({
+      success: true,
+      total: bookings.length,
+      bookings,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({
+      success: false,
+      message: "Error fetching owner bookings",
+      error,
+    });
+  }
+};
+
+// Update booking status (admin)
 export const updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -193,7 +208,7 @@ export const updateBookingStatus = async (req, res) => {
       });
     }
 
-    if (!canOwnerManageBooking(booking, req.user)) {
+    if (!canManageBooking(booking, req.user)) {
       return res.status(403).send({
         success: false,
         message: "Not allowed to update this booking",
@@ -231,7 +246,7 @@ export const deleteBooking = async (req, res) => {
       });
     }
 
-    if (!canOwnerManageBooking(booking, req.user)) {
+    if (!canManageBooking(booking, req.user)) {
       return res.status(403).send({
         success: false,
         message: "Not allowed to delete this booking",

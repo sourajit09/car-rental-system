@@ -1,6 +1,6 @@
 import express from "express"
-import { authMiddleware, isAdmin } from "../middleware/authMiddleware.js"
-import { createBooking, deleteBooking, getAllBookings, getMyBookings, updateBookingLocation, updateBookingStatus } from "../controllers/bookingController.js"
+import { authMiddleware, requireAdmin, requireOwnerOrAdmin } from "../middleware/authMiddleware.js"
+import { createBooking, deleteBooking, getAllBookings, getMyBookings, getOwnerBookings, updateBookingLocation, updateBookingStatus } from "../controllers/bookingController.js"
 
 const router=express.Router()
 
@@ -10,11 +10,14 @@ router.post("/create",authMiddleware,createBooking)
 //user bookings
 router.get("/my",authMiddleware,getMyBookings)
 
-//owner/admin - all bookings
-router.get("/all",authMiddleware,isAdmin,getAllBookings)
+//admin - all bookings
+router.get("/all",authMiddleware,requireAdmin,getAllBookings)
+
+//owner - bookings for their vehicles
+router.get("/owner",authMiddleware,requireOwnerOrAdmin,getOwnerBookings)
 
 //update status
-router.patch("/status/:id",authMiddleware,isAdmin,updateBookingStatus)
+router.patch("/status/:id",authMiddleware,requireAdmin,updateBookingStatus)
 
 //live location update
 router.patch("/:id/location",authMiddleware,updateBookingLocation)

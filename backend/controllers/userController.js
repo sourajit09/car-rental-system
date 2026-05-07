@@ -13,7 +13,7 @@ const DEVELOPMENT_PASSWORD_RESET_MESSAGE =
   "Email delivery is not configured, so the reset link is returned for local development.";
 
 const getUserRole = (user) =>
-  user.role || (user.isAdmin ? "owner" : "customer");
+  user.isAdmin ? "admin" : user.role || "customer";
 
 const hashPassword = async (password) => {
   const salt = await bcrypt.genSalt(10);
@@ -56,7 +56,11 @@ export const register = async (req, res) => {
     }
 
     const role =
-      roleInput === "owner" ? "owner" : "customer";
+      roleInput === "admin"
+        ? "admin"
+        : roleInput === "owner"
+          ? "owner"
+          : "customer";
 
     const existinguser = await userModel.findOne({ email });
     if (existinguser) {
@@ -73,6 +77,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       phone,
       role,
+      isAdmin: role === "admin",
     });
     await user.save();
     user.password = undefined;
