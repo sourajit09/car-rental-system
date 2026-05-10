@@ -54,7 +54,8 @@ const BookingModal = (prop) => {
 
       // Step 1 — Create booking first (status: pending)
       const bookingRes = await axios.post(
-        "http://localhost:8080/api/v1/booking/create",
+        // "http://localhost:8080/api/v1/booking/create",
+        "https://car-rental-system-7.onrender.com/api/v1/booking/create",
         {
           car: carId,
           startDate: pickupDate,
@@ -75,7 +76,8 @@ const BookingModal = (prop) => {
 
       // Step 2 — Create Razorpay order
       const orderRes = await axios.post(
-        "http://localhost:8080/api/v1/payment/create-order",
+        // "http://localhost:8080/api/v1/payment/create-order",
+        "https://car-rental-system-7.onrender.com/api/v1/payment/create-order",
         { amount: totalAmount },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -102,7 +104,8 @@ const BookingModal = (prop) => {
         handler: async (response) => {
           try {
             const verifyRes = await axios.post(
-              "http://localhost:8080/api/v1/payment/verify-payment",
+              // "http://localhost:8080/api/v1/payment/verify-payment",
+              "https://car-rental-system-7.onrender.com/api/v1/payment/verify-payment",
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
