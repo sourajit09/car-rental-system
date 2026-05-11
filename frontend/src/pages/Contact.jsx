@@ -66,7 +66,7 @@ const Contact = () => {
                 <div className="feature-icon"><i className="fa-solid fa-location-dot"></i></div>
                 <div>
                   <div className="fw-bold">Visit</div>
-                  <div className="text-muted">DriveHub, MG Road, Bengaluru</div>
+                  <div className="text-muted">DriveHub, Sailashree vihar, Bhubaneswar</div>
                 </div>
               </div>
             </div>
