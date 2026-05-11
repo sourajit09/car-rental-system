@@ -1,0 +1,160 @@
+import React, { useState } from 'react'
+import AuthImage from "../../assets/images/car.gif";
+import toast from 'react-hot-toast';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import API from "../../api/API.jsx"
+
+const Register = () => {
+
+  const [uname, setUname] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [phone, setPhone] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedRole =
+    searchParams.get("role") === "owner" ? "owner" : "customer";
+
+  const navigation = useNavigate()
+
+  const handleSubmit = async (e) => {
+  e.preventDefault()
+  try {
+    if (!uname || !email || !password || !phone) {
+      return toast.error("Please provide All fields");
+    }
+
+    const { data } = await API.post('/user/register', {
+      uname: uname,
+      email,
+      password,
+      phone,
+      role: selectedRole,
+    });
+
+    if (data.success) {
+      toast.success("Register Successful");
+      setUname('');
+      setEmail('');
+      setPhone('');
+      setPassword('');
+      navigation(`/login?role=${selectedRole}`);
+    } else {
+      toast.error(data.message);
+    }
+
+  } catch (error) {
+    console.log(error);
+    toast.error("Something went wrong");
+  }
+}
+  return (    
+    <div className="container py-5">
+      <div className="row align-items-center">
+
+        <div className="col-md-7 d-flex justify-content-center align-items-center">
+          <img
+            src={AuthImage}
+            alt="auth"
+            className="img-fluid"
+            style={{
+              height: "600px",
+              width: "100%",
+              objectFit: "contain"
+            }}
+          />
+        </div>
+
+        <div className="col-md-5 bg-light rounded-3 p-4 shadow">
+          <h3 className="mb-4 text-center text-dark">
+            {selectedRole === "owner" ? "Owner Registration" : "Customer Registration"}
+          </h3>
+
+          <div className="d-flex gap-2 mb-4">
+            <button
+              type="button"
+              className={`btn flex-fill ${
+                selectedRole === "customer" ? "btn-dark" : "btn-outline-dark"
+              }`}
+              onClick={() => setSearchParams({ role: "customer" })}
+            >
+              Customer
+            </button>
+            <button
+              type="button"
+              className={`btn flex-fill ${
+                selectedRole === "owner" ? "btn-dark" : "btn-outline-dark"
+              }`}
+              onClick={() => setSearchParams({ role: "owner" })}
+            >
+              Owner
+            </button>
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Enter Your Name</label>
+            <input
+              type="text"
+              value={uname}
+              onChange={(e) => setUname(e.target.value)}
+              className="form-control"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Email address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="form-control"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Mobile Number</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="form-control"
+            />
+          </div>
+
+          <div className="mb-3">
+            <label className="form-label">Password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="form-control"
+            />
+          </div>
+
+          <button className="btn btn-primary w-100" onClick={handleSubmit}>
+            {selectedRole === "owner" ? "Create owner account" : "Create customer account"}
+          </button>
+          <p className="small text-muted text-center mt-3 mb-0">
+            Already have an account?{" "}
+            <Link to={`/login?role=${selectedRole}`}>Login here</Link>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  )
+}
+
+export default Register
+
+
+// import { SignUp } from "@clerk/clerk-react";
+
+// const SignUpPage = () => {
+//   return (
+//     <div className="signUpPage">
+//       <SignUp path="/sign-up" routing="path" signInUrl="/sign-in" />
+//     </div>
+//   );
+// };
+
+// export default SignUpPage;
