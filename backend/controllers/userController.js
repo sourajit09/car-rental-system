@@ -1,16 +1,16 @@
 import userModel from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import JWT from "jsonwebtoken";
-import crypto from "crypto";
-import { sendPasswordResetEmail } from "../services/emailService.js";
+// import crypto from "crypto";
+// import { sendPasswordResetEmail } from "../services/emailService.js";
 
-const PASSWORD_RESET_EXPIRY_MINUTES = Number(
-  process.env.PASSWORD_RESET_EXPIRES_MINUTES || 15
-);
-const GENERIC_PASSWORD_RESET_MESSAGE =
-  "If an account with that email exists, a password reset link has been sent.";
-const DEVELOPMENT_PASSWORD_RESET_MESSAGE =
-  "Email delivery is not configured, so the reset link is returned for local development.";
+// const PASSWORD_RESET_EXPIRY_MINUTES = Number(
+//   process.env.PASSWORD_RESET_EXPIRES_MINUTES || 15,
+// );
+// const GENERIC_PASSWORD_RESET_MESSAGE =
+//   "If an account with that email exists, a password reset link has been sent.";
+// const DEVELOPMENT_PASSWORD_RESET_MESSAGE =
+//   "Email delivery is not configured, so the reset link is returned for local development.";
 
 const getUserRole = (user) =>
   user.isAdmin ? "admin" : user.role || "customer";
@@ -20,32 +20,33 @@ const hashPassword = async (password) => {
   return bcrypt.hash(password, salt);
 };
 
-const clearPasswordResetFields = (user) => {
-  user.passwordResetToken = undefined;
-  user.passwordResetExpiresAt = undefined;
-};
+// const clearPasswordResetFields = (user) => {
+//   user.passwordResetToken = undefined;
+//   user.passwordResetExpiresAt = undefined;
+// };
 
-const canExposeResetUrl = () =>
-  process.env.NODE_ENV !== "production" ||
-  process.env.ALLOW_RESET_LINK_IN_RESPONSE === "true";
+// const canExposeResetUrl = () =>
+//   process.env.NODE_ENV !== "production" ||
+//   process.env.ALLOW_RESET_LINK_IN_RESPONSE === "true";
 
-const buildPasswordResetUrl = (token, role) => {
-  const baseUrl = (
-    process.env.CLIENT_URL ||
-    process.env.FRONTEND_URL ||
-    "http://localhost:5173"
-  ).replace(/\/+$/, "");
+// const buildPasswordResetUrl = (token, role) => {
+//   const baseUrl = (
+//     process.env.CLIENT_URL ||
+//     process.env.FRONTEND_URL ||
+//     "http://localhost:5173"
+//   ).replace(/\/+$/, "");
 
-  const params = new URLSearchParams({
-    token,
-    role,
-  });
+//   const params = new URLSearchParams({
+//     token,
+//     role,
+//   });
 
-  return `${baseUrl}/reset-password?${params.toString()}`;
-};
+//   return `${baseUrl}/reset-password?${params.toString()}`;
+// };
 
 export const register = async (req, res) => {
   try {
+    console.log("request is comming")
     const { uname, email, password, phone, role: roleInput } = req.body;
 
     if (!uname || !email || !password || !phone) {
@@ -105,7 +106,9 @@ export const login = async (req, res) => {
         success: false,
       });
     }
+
     const user = await userModel.findOne({ email }).lean();
+
     if (!user) {
       return res.status(500).send({
         message: "user not found",
@@ -119,17 +122,15 @@ export const login = async (req, res) => {
         message: "Invalid credentials",
       });
     }
-      // Generate JWT token
-    const token = JWT.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    // Generate JWT token
+    const token = JWT.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     const { password: _pw, ...userSafe } = user;
     const role = getUserRole(userSafe);
     res.status(200).send({
-      success: true,
+      success: true,  
       message: "Login Successful",
       token,
       user: { ...userSafe, role },
@@ -146,17 +147,20 @@ export const login = async (req, res) => {
 
 export const getProfile = async (req, res) => {
   try {
-    const user = await userModel.findById(req.user.id).select("-password").lean();
-    if(!user){
+    const user = await userModel
+      .findById(req.user.id)
+      .select("-password")
+      .lean();
+    if (!user) {
       return res.status(404).send({
-        success:false,
-        message:"User not found"
+        success: false,
+        message: "User not found",
       });
     }
 
     const role = getUserRole(user);
     res.status(200).send({
-      success:true,
+      success: true,
       user: {
         ...user,
         role,
@@ -165,8 +169,8 @@ export const getProfile = async (req, res) => {
   } catch (error) {
     console.log(error);
     res.status(500).send({
-      success:false,
-      message:"Error fetching profile",
+      success: false,
+      message: "Error fetching profile",
       error,
     });
   }
@@ -207,11 +211,10 @@ export const updateUser = async (req, res) => {
       data.password = await hashPassword(data.password);
     }
 
-    const user = await userModel.findByIdAndUpdate(
-      id,
-      { $set: data },
-      { new: true },
-    ).select("-password").lean();
+    const user = await userModel
+      .findByIdAndUpdate(id, { $set: data }, { new: true })
+      .select("-password")
+      .lean();
 
     if (!user) {
       return res.status(404).send({
@@ -238,137 +241,139 @@ export const updateUser = async (req, res) => {
   }
 };
 
-export const forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
+// export const forgotPassword = async (req, res) => {
+//   try {
+//     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).send({
-        success: false,
-        message: "Email is required",
-      });
-    }
+//     if (!email) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Email is required",
+//       });
+//     }
 
-    const user = await userModel.findOne({ email });
+//     const user = await userModel.findOne({ email });
 
-    if (!user) {
-      return res.status(200).send({
-        success: true,
-        message: GENERIC_PASSWORD_RESET_MESSAGE,
-      });
-    }
+//     if (!user) {
+//       return res.status(200).send({
+//         success: true,
+//         message: GENERIC_PASSWORD_RESET_MESSAGE,
+//       });
+//     }
 
-    const role = getUserRole(user);
-    const rawResetToken = crypto.randomBytes(32).toString("hex");
-    const hashedResetToken = crypto
-      .createHash("sha256")
-      .update(rawResetToken)
-      .digest("hex");
+//     const role = getUserRole(user);
+//     const rawResetToken = crypto.randomBytes(32).toString("hex");
+//     const hashedResetToken = crypto
+//       .createHash("sha256")
+//       .update(rawResetToken)
+//       .digest("hex");
 
-    user.passwordResetToken = hashedResetToken;
-    user.passwordResetExpiresAt = new Date(
-      Date.now() + PASSWORD_RESET_EXPIRY_MINUTES * 60 * 1000
-    );
-    await user.save();
+//     user.passwordResetToken = hashedResetToken;
+//     user.passwordResetExpiresAt = new Date(
+//       Date.now() + PASSWORD_RESET_EXPIRY_MINUTES * 60 * 1000,
+//     );
+//     await user.save();
 
-    const resetUrl = buildPasswordResetUrl(rawResetToken, role);
+//     const resetUrl = buildPasswordResetUrl(rawResetToken, role);
 
-    try {
-      await sendPasswordResetEmail({
-        to: user.email,
-        name: user.uname,
-        role,
-        resetUrl,
-      });
+//     try {
+//       await sendPasswordResetEmail({
+//         to: user.email,
+//         name: user.uname,
+//         role,
+//         resetUrl,
+//       });
 
-      return res.status(200).send({
-        success: true,
-        message: GENERIC_PASSWORD_RESET_MESSAGE,
-      });
-    } catch (emailError) {
-      if (emailError.code === "MAIL_NOT_CONFIGURED" && canExposeResetUrl()) {
-        return res.status(200).send({
-          success: true,
-          message: DEVELOPMENT_PASSWORD_RESET_MESSAGE,
-          resetUrl,
-        });
-      }
+//       return res.status(200).send({
+//         success: true,
+//         message: GENERIC_PASSWORD_RESET_MESSAGE,
+//       });
+//     } catch (emailError) {
+//       if (emailError.code === "MAIL_NOT_CONFIGURED" && canExposeResetUrl()) {
+//         return res.status(200).send({
+//           success: true,
+//           message: DEVELOPMENT_PASSWORD_RESET_MESSAGE,
+//           resetUrl,
+//         });
+//       }
 
-      clearPasswordResetFields(user);
-      await user.save();
+//       clearPasswordResetFields(user);
+//       await user.save();
 
-      console.log(emailError);
-      return res.status(500).send({
-        success: false,
-        message: "Unable to send password reset email right now",
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      success: false,
-      message: "Error sending password reset link",
-      error,
-    });
-  }
-};
+//       console.log(emailError);
+//       return res.status(500).send({
+//         success: false,
+//         message: "Unable to send password reset email right now",
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error sending password reset link",
+//       error,
+//     });
+//   }
+// };
 
-export const resetPassword = async (req, res) => {
-  try {
-    const { token, password, confirmPassword } = req.body;
+// export const resetPassword = async (req, res) => {
+//   try {
+//     const { token, password, confirmPassword } = req.body;
 
-    if (!token || !password) {
-      return res.status(400).send({
-        success: false,
-        message: "Reset token and new password are required",
-      });
-    }
+//     if (!token || !password) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Reset token and new password are required",
+//       });
+//     }
 
-    if (password.length < 6) {
-      return res.status(400).send({
-        success: false,
-        message: "Password must be at least 6 characters long",
-      });
-    }
+//     if (password.length < 6) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Password must be at least 6 characters long",
+//       });
+//     }
 
-    if (confirmPassword !== undefined && password !== confirmPassword) {
-      return res.status(400).send({
-        success: false,
-        message: "Passwords do not match",
-      });
-    }
+//     if (confirmPassword !== undefined && password !== confirmPassword) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Passwords do not match",
+//       });
+//     }
 
-    const hashedResetToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+//     const hashedResetToken = crypto
+//       .createHash("sha256")
+//       .update(token)
+//       .digest("hex");
 
-    const user = await userModel.findOne({
-      passwordResetToken: hashedResetToken,
-      passwordResetExpiresAt: { $gt: new Date() },
-    }).select("+passwordResetToken +passwordResetExpiresAt");
+//     const user = await userModel
+//       .findOne({
+//         passwordResetToken: hashedResetToken,
+//         passwordResetExpiresAt: { $gt: new Date() },
+//       })
+//       .select("+passwordResetToken +passwordResetExpiresAt");
 
-    if (!user) {
-      return res.status(400).send({
-        success: false,
-        message: "Reset link is invalid or has expired",
-      });
-    }
+//     if (!user) {
+//       return res.status(400).send({
+//         success: false,
+//         message: "Reset link is invalid or has expired",
+//       });
+//     }
 
-    user.password = await hashPassword(password);
-    clearPasswordResetFields(user);
-    await user.save();
+//     user.password = await hashPassword(password);
+//     clearPasswordResetFields(user);
+//     await user.save();
 
-    res.status(200).send({
-      success: true,
-      message: "Password reset successful. Please log in again.",
-    });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({
-      success: false,
-      message: "Error resetting password",
-      error,
-    });
-  }
-};
+//     res.status(200).send({
+//       success: true,
+//       message: "Password reset successful. Please log in again.",
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).send({
+//       success: false,
+//       message: "Error resetting password",
+//       error,
+//     });
+//   }
+// };

@@ -88,6 +88,12 @@ const Register = () => {
             >
               Owner
             </button>
+            <Link
+              to="/admin/register"
+              className="btn flex-fill btn-outline-dark"
+            >
+              Admin
+            </Link>
           </div>
 
           <div className="mb-3">

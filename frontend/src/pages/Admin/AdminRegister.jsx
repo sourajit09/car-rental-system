@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import API from "../../../src/api/API.jsx";
+import API from "../../api/API.jsx";
+import "./AdminStyles.css";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const AdminRegister = () => {
       }
 
       toast.success("Admin account created");
-      navigate("/login");
+      navigate("/admin/login");
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
     }
@@ -53,7 +54,18 @@ const AdminRegister = () => {
       </section>
 
       <section className="admin-auth-card">
-        <h3 className="mb-4">Admin Registration</h3>
+        <h3 className="mb-4 text-center">Admin Registration</h3>
+        <div className="d-flex gap-2 mb-4">
+          <Link to="/register?role=customer" className="btn flex-fill btn-outline-dark">
+            Customer
+          </Link>
+          <Link to="/register?role=owner" className="btn flex-fill btn-outline-dark">
+            Owner
+          </Link>
+          <button type="button" className="btn flex-fill btn-dark">
+            Admin
+          </button>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Name</label>
@@ -94,7 +106,7 @@ const AdminRegister = () => {
           </button>
         </form>
         <p className="small text-muted text-center mt-3 mb-0">
-          Already have an admin account? <Link to="/login">Login here</Link>
+          Already have an admin account? <Link to="/admin/login">Login here</Link>
         </p>
       </section>
     </main>

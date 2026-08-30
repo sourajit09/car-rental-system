@@ -51,7 +51,7 @@ const AdminRoute = ({ children }) => {
     };
   }, [token]);
 
-  if (!token) return <Navigate to="/login" replace />;
+  if (!token) return <Navigate to="/admin/login" replace />;
   if (isChecking) {
     return <div className="container py-5">Checking admin access...</div>;
   }

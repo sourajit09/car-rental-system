@@ -1,6 +1,6 @@
-import razorpay from '../config/razorpayHelper.js';
-import bookingModel from '../models/bookingModel.js';
-import crypto from 'crypto';
+import razorpay from "../config/razorpayHelper.js";
+import bookingModel from "../models/bookingModel.js";
+import crypto from "crypto";
 
 // CREATE ORDER
 export const createOrder = async (req, res) => {
@@ -9,11 +9,14 @@ export const createOrder = async (req, res) => {
 
         const options = {
             amount: amount * 100,
-            currency: 'INR',
+            currency: "INR",
             receipt: `receipt_${Date.now()}`,
         };
 
+        console.log("before order")
+
         const order = await razorpay.orders.create(options);
+        console.log(order)
 
         res.status(200).send({
             success: true,
@@ -21,45 +24,54 @@ export const createOrder = async (req, res) => {
         });
     } catch (error) {
         console.log(error);
-        res.status(500).send({ success: false, message: 'Error creating order', error });
+        res
+            .status(500)
+            .send({ success: false, message: "Error creating order", error });
     }
 };
 
 // VERIFY PAYMENT
 export const verifyPayment = async (req, res) => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, bookingId } = req.body;
+        console.log("verify payment api is being hit")
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            bookingId,
+        } = req.body;
 
-         
-        console.log("req.body:", req.body);  // ✅ add this
-        console.log("KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET);  // ✅ add this
-
+        console.log("req.body:", req.body);
+        console.log("KEY_SECRET:", process.env.RAZORPAY_KEY_SECRET);
         // crypto is available globally in Node.js — no import needed
-        const sign = razorpay_order_id + '|' + razorpay_payment_id;
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSignature = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign)
-            .digest('hex');
+            .digest("hex");
 
-
-        console.log("expected:", expectedSignature);      // ✅ add this
+        console.log("expected:", expectedSignature);
         console.log("received:", razorpay_signature);
 
         if (expectedSignature !== razorpay_signature) {
-            return res.status(400).send({ success: false, message: 'Invalid payment signature' });
+            return res
+                .status(400)
+                .send({ success: false, message: "Invalid payment signature" });
         }
 
         await bookingModel.findByIdAndUpdate(bookingId, {
-            status: 'confirm',
+            status: "confirm",
             paymentId: razorpay_payment_id,
         });
 
         res.status(200).send({
             success: true,
-            message: 'Payment verified successfully',
+            message: "Payment verified successfully",
         });
     } catch (error) {
         console.log(error);
-        res.status(500).send({ success: false, message: 'Error verifying payment', error });
+        res
+            .status(500)
+            .send({ success: false, message: "Error verifying payment", error });
     }
 };

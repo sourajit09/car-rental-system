@@ -1,7 +1,8 @@
 import React from "react";
 import { toast } from "react-hot-toast";
-import axios from "axios";
+
 import { useNavigate } from "react-router-dom";
+import API from "../api/API";
 
 const BookingModal = (prop) => {
   const navigate = useNavigate();
@@ -53,18 +54,17 @@ const BookingModal = (prop) => {
       const totalAmount = calculateTotal();
 
       // Step 1 — Create booking first (status: pending)
-      const bookingRes = await axios.post(
-        // "http://localhost:8080/api/v1/booking/create",
-        "https://car-rental-system-7.onrender.com/api/v1/booking/create",
+      const bookingRes = await API.post(
+        "/booking/create",
         {
           car: carId,
           startDate: pickupDate,
           returnDate: returnDate,
           totalPrice: totalAmount,
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+        }
+        // {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        // },
       );
 
       if (!bookingRes.data.success) {
@@ -75,13 +75,13 @@ const BookingModal = (prop) => {
       console.log(bookingId);
 
       // Step 2 — Create Razorpay order
-      const orderRes = await axios.post(
-        // "http://localhost:8080/api/v1/payment/create-order",
-        "https://car-rental-system-7.onrender.com/api/v1/payment/create-order",
-        { amount: totalAmount },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+      const orderRes = await API.post(
+        "/payment/create-order",
+        // "https://car-rental-system-7.onrender.com/api/v1/payment/create-order",
+        { amount: totalAmount }
+        // {
+        //   headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        // },
       );
 
       if (!orderRes.data.success) {
@@ -90,8 +90,11 @@ const BookingModal = (prop) => {
 
       const order = orderRes.data.order;
       const user = JSON.parse(localStorage.getItem("user"));
+      console.log(orderRes)
 
       // Step 3 — Open Razorpay checkout
+      console.log("Frontend Key:", import.meta.env.VITE_RAZORPAY_KEY_ID);
+console.log("Order ID:", order.id);
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: order.amount,
@@ -103,20 +106,21 @@ const BookingModal = (prop) => {
         // Step 4 — On payment success
         handler: async (response) => {
           try {
-            const verifyRes = await axios.post(
-              // "http://localhost:8080/api/v1/payment/verify-payment",
-              "https://car-rental-system-7.onrender.com/api/v1/payment/verify-payment",
+            console.log("verify payment")
+            const verifyRes = await API.post(
+              "/payment/verify-payment",
+              // "https://car-rental-system-7.onrender.com/api/v1/payment/verify-payment",
               {
                 razorpay_order_id: response.razorpay_order_id,
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 bookingId,
-              },
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              },
+               }
+              // {
+              //   headers: {
+              //     Authorization: `Bearer ${localStorage.getItem("token")}`,
+              //   },
+              // },
             );
 
             if (verifyRes.data.success) {

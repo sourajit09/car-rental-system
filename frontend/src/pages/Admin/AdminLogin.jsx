@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import API from "../../../src/api/API.jsx";
-import { getUserRole, setAuthSession } from "../../../src/utils/authStorage.js";
+import API from "../../api/API.jsx";
+import { getUserRole, setAuthSession } from "../../utils/authStorage.js";
+import "./AdminStyles.css";
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ const AdminLogin = () => {
 
       setAuthSession({ token: data.token, user: data.user });
       toast.success("Admin login successful");
-      navigate("/dashboard");
+      navigate("/admin/dashboard");
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
     }
@@ -53,7 +54,18 @@ const AdminLogin = () => {
       </section>
 
       <section className="admin-auth-card">
-        <h3 className="mb-4">Admin Login</h3>
+        <h3 className="mb-4 text-center">Admin Login</h3>
+        <div className="d-flex gap-2 mb-4">
+          <Link to="/login?role=customer" className="btn flex-fill btn-outline-dark">
+            Customer
+          </Link>
+          <Link to="/login?role=owner" className="btn flex-fill btn-outline-dark">
+            Owner
+          </Link>
+          <button type="button" className="btn flex-fill btn-dark">
+            Admin
+          </button>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-3">
             <label className="form-label">Email address</label>
@@ -78,7 +90,7 @@ const AdminLogin = () => {
           </button>
         </form>
         <p className="small text-muted text-center mt-3 mb-0">
-          Need an admin account? <Link to="/register">Create admin signup</Link>
+          Need an admin account? <Link to="/admin/register">Create admin signup</Link>
         </p>
       </section>
     </main>

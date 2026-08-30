@@ -31,7 +31,7 @@ const canManageBooking = (booking, user) => {
   }
   return false;
 };
-
+ 
 // Create booking
 export const createBooking = async (req, res) => {
   try {
@@ -69,7 +69,7 @@ export const createBooking = async (req, res) => {
       });
     }
 
-    // check availability (overlap with pending/confirm bookings)
+    //check availability (overlap with pending/confirm bookings)
     const conflict = await bookingModel.findOne({
       car,
       status: { $in: ["pending", "confirm"] },
@@ -84,7 +84,7 @@ export const createBooking = async (req, res) => {
         message: "Car not available for selected dates",
       });
     }
-
+ 
     const totalPrice = calculateTotalPrice(startDate, returnDate, carDoc.price);
 
     const booking = new bookingModel({

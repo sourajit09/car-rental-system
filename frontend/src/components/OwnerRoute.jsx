@@ -33,6 +33,7 @@ const OwnerRoute = ({ children }) => {
           }
         }
       } catch (error) {
+        console.log(error)
         if (!ignore) {
           clearAuthSession();
           setUser(null);

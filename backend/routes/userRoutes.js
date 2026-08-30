@@ -1,20 +1,20 @@
 import express from "express"
 import {
-  forgotPassword,
+//forgotPassword
   getProfile,
   login,
   register,
-  resetPassword,
+  // resetPassword,
   updateUser,
 } from "../controllers/userController.js"
 import { authMiddleware } from './../middleware/authMiddleware.js'
 
-const router=express.Router()  
+const router=express.Router();
 
 router.post("/register",register)
 router.post("/login",login)
-router.post("/forgot-password",forgotPassword)
-router.post("/reset-password",resetPassword)
+// router.post("/forgot-password",forgotPassword)
+// router.post("/reset-password",resetPassword)
 
 router.get("/me",authMiddleware,getProfile)
 

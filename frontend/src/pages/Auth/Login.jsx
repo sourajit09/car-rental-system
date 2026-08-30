@@ -93,6 +93,12 @@ const Login = () => {
             >
               Owner
             </button>
+            <Link
+              to="/admin/login"
+              className="btn flex-fill btn-outline-dark"
+            >
+              Admin
+            </Link>
           </div>
 
           <div className="mb-3">
